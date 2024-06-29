@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+
+
+    <link rel="stylesheet" href="/stylesheets/userprofile.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+
+</head>
+
+<body>
+    <header>
+
+
+        <div>
+            <h1 style="font-size: 34px;">Course Match</h1>
+        </div>
+        <nav>
+            <ul>
+
+                <li><a href="/feed">Home</a></li>
+                <li><a href="/courses">Courses</a></li>
+                <li><a href="/profile">Profile</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/contact">ContactUs</a></li>
+            </ul>
+        </nav>
+    </header>
+
+
+
+
+
+
+    <main>
+        <section class="profile-details">
+
+            <div class="user-info">
+
+
+                <a href="/images/uploads/<%=user.profileImage%>">
+                    <img src="/images/uploads/<%=user.profileImage%>" alt="">
+                </a>
+
+
+
+                <div class="details">
+                    <h2>
+                        <%=user.fullname%>
+                    </h2>
+                    <p>
+                        <%=user.major%>
+                    </p>
+                    <p>
+                        <%=user.university%>
+                    </p>
+                    <p>
+                        Interests: <%=user.interests%>
+                    </p>
+                    <!-- Add more user details here -->
+                </div>
+            </div>
+        </section>
+        <div class="outer">
+            <div class="timeline">
+                <% if (entries && entries.length> 0) { %>
+                    <% entries.forEach((entry, index)=> { %>
+                        <div class="circular-div">
+                            <div class="info">
+                                <% if (index===entries.length - 1) { %>
+                                    <br>Currently at:<br><strong>
+                                        <%= entry.school %>
+                                    </strong>
+                                    <% } else { %>
+                                        <br> Studied at:<br><strong>
+                                            <%= entry.school %>
+                                        </strong>
+                                        <% } %>
+                            </div>
+                            <div class="dates">
+                                <%= entry.batch %>
+                            </div>
+                        </div>
+                        <% }) %>
+                            <% } else { %>
+                                <div class="circular-div">
+                                    <div class="info">
+                                        Studied at:<br><strong></strong><br>
+                                    </div>
+                                    <div class="dates"></div>
+                                </div>
+                                <div class="circular-div">
+                                    <div class="info">
+                                        Studied at:<br><strong></strong><br>
+                                    </div>
+                                    <div class="dates"></div>
+                                </div>
+                                <% } %>
+            </div>
+        </div>
+
+        <div class="message-div">
+
+            <div class="feedHistory">
+                <h2>Feed History</h2>
+                <%user.posts.forEach(function(post){ %>
+
+                    <div class="feedContent">
+                       
+                        <p class="postContent">
+                            <%=post.content%>
+
+                        </p>
+                        <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                            <button class="comment-btn">comments</button>
+                            <p class="timeDiv">
+                                <%= post.formattedCreatedAt%>
+                            </p>
+                        </div>
+                        <div style="display: none;" class="comment-section">
+                            <% post.comments.forEach(function(comment){ %>
+
+                            <div>
+                                <div style="display: flex; gap: 10px;margin-top: 10px;">
+                                    <img src="/images/uploads<%=comment.profileImage%>" alt="">
+                                    <p>
+                                        <%=comment.fullname%>
+
+                                    </p>
+                                </div>
+                                <div>
+                                    <p>
+                                        <%=comment.content %>
+
+                                    </p>
+                                </div>
+                                <p class="timeDiv">
+                                    <%=comment.createdAt%>
+
+                                </p>
+                            </div>
+                            <% }); %>
+
+
+                        </div>
+                    </div>
+                    <% }); %>
+
+            </div>
+            <!-- <div class="feed-history"><span class="heading-message-div"><strong>Your Feed</strong></span>
+                <div class="feed">
+                    <div class="feed-item">
+                        <img src="https://via.placeholder.com/150" alt="Placeholder Image">
+                        <div class="feed-content">
+                            <h3>Post Title 1</h3>
+                            <p>This is the content of post 1...</p>
+                            <span class="date">Posted on: May 1, 2024</span>
+                        </div>
+                    </div>
+
+                    Add more feed items here -->
+            <!-- </div>
+            </div> -->
+            <div style="margin-bottom: 0px;" class="message-box"><span class="heading-message-div"><strong>Message to
+                        <%=user.username%>
+                    </strong></span>
+
+                <div class="chat-box">
+                    <div class="message sender">
+                        <p>Hello there!</p>
+                    </div>
+                    <div class="message receiver">
+                        <p>Hi! How can I help you?</p>
+                    </div>
+                    <div class="message sender">
+                        <p>I need assistance with a coding problem.</p>
+                    </div>
+                    <div class="message receiver">
+                        <p>Sure, I'd be happy to help.</p>
+                    </div>
+                    <!-- Add more messages here -->
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <!-- Footer content, like copyright information -->
+    </footer>
+<script src="/javascripts/userprofile.js"></script>
+</body>
+
+</html>

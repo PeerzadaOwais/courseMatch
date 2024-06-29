@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Members</title>
+    <link rel="stylesheet" href="/stylesheets/group.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+</head>
+
+<body>
+    <header>
+        <h1>Group Name</h1>
+        <nav>
+            <ul>
+                <li><a href="/feed">Home</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/contact">ContactUs</a></li>
+                <li><a href="/profile">Profile</a></li>
+                <!-- <li class="dropdown">
+                        <button style="font-size: 16px; margin-top: -30px; margin-left: -5px;"
+                            class="dropbtn"><strong>Profile</strong></button>
+                        <div class="dropdown-content">
+                            <a href="#">Settings</a>
+                            <a href="#" onclick="CreateGroup()">Create Group</a>
+                            <a href="/groupchat">Groups</a>
+                            <a href="#">Logout</a>
+                        </div>
+                </li> -->
+
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div id="message-container">
+            <section id="group-members">
+                <h2>Group Members</h2>
+                <div id="members-list">
+                    <!-- Members will be dynamically populated here -->
+                </div>
+            </section>
+
+            <div>
+                <section id="messages">
+                    <h2>Group Chat</h2>
+                    <div id="chat-messages">
+                        <!-- Chat messages will go here -->
+                    </div>
+                </section>
+                <div style="position: absolute; width: 70%;">
+                    <form id="message-form">
+                        <input type="text" id="message-input" placeholder="Type your message...">
+                        <i id="upload-icon" class="fa-solid fa-paperclip"></i>
+                        <button type="submit">Send</button>
+                    </form>
+                    <form id="upload-form" hidden action="" enctype="multipart/form-data">
+                        <input type="file" id="file-input">
+
+                    </form>
+                    <!-- <button id="upload-button">Upload</button> -->
+                    <ul id="file-list">
+                </div>
+            </div>
+            <div class="groups-div">
+                <h2>Groups</h2>
+                <hr>
+                <%user.groups.forEach(function(group){%>
+                    <ul>
+                        <li class="group-item" data-group-id="<%= group._id %>">
+                            <img src="/images/uploads/<%=group.picture%>" alt="">
+                            <span>
+                                <%=group.name%>
+                            </span>
+                        </li>
+                        <hr>
+
+                    </ul>
+                    <%});%>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Course Match</p>
+    </footer>
+    <script src="/javascripts/group.js"></script>
+
+</body>
+
+</html>

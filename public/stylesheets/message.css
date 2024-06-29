@@ -1,0 +1,43 @@
+/* CSS styles for the messaging interface */
+#messaging-container {
+    display: flex;
+  }
+  
+  #message-inbox {
+    width: 30%;
+    overflow-y: auto;
+  }
+  
+  #message-view {
+    flex: 1;
+    padding: 10px;
+  }
+  
+  .conversation-item {
+    cursor: pointer;
+    padding: 10px;
+  }
+  
+  .conversation-item:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .message-preview {
+    font-weight: bold;
+  }
+  
+  #message-thread {
+    margin-bottom: 20px;
+  }
+  
+  #message-input {
+    width: calc(100% - 70px);
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  
+  #message-form button {
+    width: 60px;
+    padding: 10px;
+  }
+  

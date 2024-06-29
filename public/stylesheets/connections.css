@@ -1,0 +1,64 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: arial;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+}
+.main {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  background-color: white;
+}
+.connection {
+  padding: 20px;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  width: 450px;
+  background-color: #f0f0f0;
+}
+.connection h2 {
+  text-align: center;
+}
+.connection img {
+  height: 50px;
+  width: 50px;
+  border-radius: 50%;
+}
+
+.connectionList {
+  background-color: rgb(212, 226, 226);
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+.acceptBtn {
+  width: 70px;
+  height: 30px;
+  font-size: 15px;
+  border-radius: 10px;
+  background-color: #4caf50;
+  border: none;
+  color: white;
+  cursor: pointer;
+  /* float: right; */
+}
+.fa-xmark {
+  cursor: pointer;
+  color: red;
+  margin-top: 5px;
+  font-size: 20px;
+}
+
+.connectionData {
+  display: flex;
+  gap: 10px;
+}

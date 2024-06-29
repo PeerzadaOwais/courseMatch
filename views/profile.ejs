@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - Course Match</title>
+    <link rel="stylesheet" href="/stylesheets/profile.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+</head>
+
+<body>
+    <header>
+        <h1>User Profile</h1>
+        <nav>
+            <ul>
+                <li><a href="/feed">Home</a></li>
+                <li><a href="/feeds">Feed</a></li>
+                <li><a href="/courses">Courses</a></li>
+                <li><a href="/profile" class="active">Profile</a></li>
+                <li><a href="/about">About</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section id="profile-info">
+            <div class="profile-details">
+                <div class="profile-picture">
+                    <img src="/images/uploads/<%= user.profileImage%>" alt=" loading">
+                    <i id="upload-icon" class="fas fa-pencil-alt"></i>
+                    <form id="upload-form" hidden action="/fileupload" method="post" enctype="multipart/form-data">
+                        <input class="profile-pic-upload" type="file" name="image">
+                    </form>
+                </div>
+                <div class="user-details">
+                    <p><strong>Name:</strong>
+                        <%=user.fullname%>
+                    </p>
+                    <p><strong>Email:</strong>
+                        <%=user.email%>
+                    </p>
+                    <p><strong>Currently at:</strong>
+                        <%=user.university%>
+                    </p>
+                    <p><strong>Major:</strong>
+                        <%=user.major%>
+                    </p>
+                    <p><strong>Year:</strong>
+                        <%=user.year%>
+                    </p>
+                    <p></p><strong>Interests:</strong>
+                    <%=user.interests%>
+                        </p>
+                </div>
+            </div>
+        </section>
+        <section id="update-profile">
+
+            <div style=" width: 50%;">
+                <h2>Update Profile</h2>
+                <form action="/edit" method="post">
+                    <input type="text" id="name" name="fullname" placeholder="Name" value="<%=user.fullname%>">
+                    <input type="email" id="email" name="email" placeholder="Email" value="<%=user.email%>">
+                    <input type="text" id="university" name="university" placeholder="university"
+                        value="<%=user.university%>">
+                    <input type="text" id="major" name="major" placeholder="Stram" value="<%=user.major%>">
+                    <input type="number" id="year" name="year" placeholder="Batch" value="<%=user.year%>">
+                    <textarea id="interests" name="interests" rows="4"
+                        placeholder="Web Development, Artificial Intelligence, Data Science"><%= user.interests %></textarea>
+                    <button type="submit">Update</button>
+                </form>
+            </div>
+            <div class="feedHistoryDiv">
+
+                <h2>Feed History</h2>
+
+
+                <%user.posts.forEach(function(post){ %>
+                    <div class="feedContent">
+
+                        <i class="threeDot fa-solid fa-ellipsis-vertical"></i>
+                        <div class="logUserDiv" style="display: none;">
+                            <h4 style="margin-left: 50px;"> Do you want to delete this post ?</h4>
+                            <div style="display: flex; justify-content: space-around;">
+                                <a href="#" onclick="deletePost('<%=post._id%>')">Yes</a>
+                                <a href="#" onclick="hideDiv()">No</a>
+                            </div>
+
+                        </div>
+                        <p class="postContent">
+                            <%=post.content%>
+                        </p>
+                        <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                            <button class="comment-btn">comments</button>
+                            <p class="timeDiv">
+                                <%= post.formattedCreatedAt%>
+                            </p>
+                        </div>
+
+                        <div style="display: none;" class="comment-section">
+                            <% post.comments.forEach(function(comment){ %>
+                                <div >
+                                    <div style="display: flex; gap: 10px;margin-top: 10px;">
+                                        <img src="/images/uploads<%=comment.profileImage%>" alt="">
+                                        <p>
+                                            <%=comment.fullname%>
+                                                <%=console.log(comment.fullname)%>
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p>
+                                            <%=comment.content %>
+                                        </p>
+                                    </div>
+                                    <p class="timeDiv">
+                                        <%=comment.createdAt%>
+                                    </p>
+                                </div>
+
+                                <% }); %>
+                        </div>
+                    </div>
+                    <% }); %>
+            </div>
+        </section>
+        <div class="timelinediv">
+            <h2>create you timeline</h2>
+            <div class="outer">
+                <div class="timeline">
+                    <% user.entries.forEach(function(entry) { %>
+                        <div class="circular-div">
+                            <div class="info">
+                                <i class="fa-solid fa-xmark" onclick="this.parentElement.parentElement.remove();"></i>
+                                <input class="studyinput" type="text" placeholder="add school/college"
+                                    value="<%= entry.school %>">
+                            </div>
+                            <div class="dates"><input class="dateinput" type="text" placeholder="batch"
+                                    value="<%= entry.batch %>"></div>
+                        </div>
+                        <% }); %>
+                            <div id="circle">
+                                <i class="fa-solid fa-plus"></i>
+                            </div>
+                </div>
+                <button class="timelineBtn" onclick="saveEntries()">save</button>
+            </div>
+
+        </div>
+    </main>
+    <footer>
+        <div>
+            <a href="/logout">logout</a>
+        </div>
+        <p>&copy; 2024 Course Match</p>
+    </footer>
+    <script src="/javascripts/profile.js"></script>
+</body>
+
+</html>

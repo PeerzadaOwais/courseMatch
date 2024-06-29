@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <link rel="stylesheet" href="styles.css"> -->
+    <title>Course Match</title>
+    <link rel="stylesheet" href="/stylesheets/feed.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="icon" type="image/png" href="/images/group.png">
+</head>
+
+<body>
+    <header>
+
+
+        <div>
+            <h1 style="font-size: 34px;">Course Match</h1>
+        </div>
+        <nav>
+            <ul>
+
+                <li><a href="/feed">Home</a></li>
+                <li><a href="/feeds">Feed</a></li>
+                <li><a href="/connections/<%=user._id%>">Connections</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/contact">ContactUs</a></li>
+                <li class="dropdown">
+                    <a href="/profile"><button style="font-size: 16px; margin-top: -30px; margin-left: -5px;"
+                            class="dropbtn"><strong>Profile</strong></button></a>
+                    <div class="dropdown-content">
+                        <a href="#">Settings</a>
+                        <a href="#" onclick="CreateGroup()">Create Group</a>
+                        <a href="/groups">Groups</a>
+                        <a href="/logout">Logout</a>
+                    </div>
+                    <!-- </div> -->
+                </li>
+            </ul>
+        </nav>
+    </header>
+    <div id="group" hidden>
+
+        <h1>Create a New Group</h1>
+        <form id="groupForm" action="/create" method="post" enctype="multipart/form-data">
+            <div>
+                <label for="name">Group Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div>
+                <label for="description">Description:</label>
+                <textarea id="description" name="description"></textarea>
+            </div>
+            <div>
+                <label for="picture">Group Picture:</label>
+                <input type="file" id="picture" name="picture">
+            </div>
+            <div>
+                <label for="members">Add Members:</label>
+                <div id="selected-members" class="selected-members"></div>
+                <input type="text" id="members-input" name="members-input" oninput="searchMembers()" autocomplete="off">
+                <div id="suggestions" class="suggestions"></div>
+                <input type="hidden" id="members" name="members">
+            </div>
+
+            <button type="submit">Create Group</button>
+        </form>
+
+    </div>
+    <main>
+
+
+        <section style="background-color: #e2e6e8; ">
+
+            <!-- <img src="img1.jpg" alt="loading"> -->
+            <div style="padding: 20px; font-size: 20px;">Hi&nbsp; <%=user.fullname%>
+            </div>
+
+            <div id="hero">
+                <h2>Welcome to Course Match</h2>
+                <p>Connect with friends who share similar courses and interests.</p>
+            </div>
+
+        </section>
+
+        <section id="search-match">
+            <h3>Find Your Matches</h3>
+            <form>
+                <label for="courses-input">Search by name, school, college, university, class or stream</label>
+                <input type="text" id="courses-input" placeholder="e.g., university of kashmir, owais, CS,etc...">
+                <button type="button" onclick="toggleSearchResults()">Find Matches</button>
+            </form>
+        </section>
+        <!-- <div class="card-container">
+            <img src="/images/alt-user-profile.jpg" alt="">
+            <div class="info">
+                <a href="">
+                    <h3>peer owais</h3>
+                </a>
+                <p>stream</p>
+                <p>university</p>
+                <button class="connect-button">comment</button>
+            </div>
+        </div> -->
+        <!-- <div class="card-container">
+            <button class="connect-button" onclick="toggleFunction(this,'<%= users._id %>', '<%= user._id %>')"></button>
+
+        </div> -->
+        <section id="featured">
+            <h3>People you may know</h3>
+
+
+
+            <div id="featured-cards">
+                <% matchingUsers.forEach(function(users) { %>
+                    <div class="inner-featured-cards">
+                        <a href="/userprofile/<%= users._id %>"><img id="img1"
+                                src="/images/uploads/<%=users.profileImage%>"> </a>
+                        <a href="/userprofile/<%= users._id %>">
+                            <h2>
+                                <%= users.fullname %>
+                            </h2>
+                        </a>
+                        <button id="toggleButton" onclick="toggleFunction(this,'<%= users._id %>', '<%= user._id %>')"
+                            class="connect-btn">Connect</button>
+
+                    </div>
+                    <% }); %>
+            </div>
+        </section>
+
+
+
+        <section id="how-it-works">
+            <h3>How It Works</h3>
+            <p>1. Enter your courses.</p>
+            <p>2. Our matching algorithm finds friends with similar courses.</p>
+            <p>3. Connect with friends and explore shared interests!</p>
+        </section>
+    </main>
+    <section class="hidden" id="search-results">
+
+    </section>
+    <footer>
+
+        <p>&copy; 2024 Course Match</p>
+    </footer>
+
+    <script src="javascripts/feed.js"></script>
+</body>
+
+</html>

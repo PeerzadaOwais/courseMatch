@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>connections</title>
+    <link rel="stylesheet" href="/stylesheets/connections.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+</head>
+
+<body>
+    <div class="main">
+
+
+        <div class="connection" id="ConnectionsDiv">
+            <h2>Connections</h2>
+            <hr>
+            <% connected.forEach(connection=> { %>
+
+                <div class="connectionList">
+                    <div class="connectionData">
+                        <img src="/images/alt-user-profile.jpg" alt="">
+                        <p style="margin-top: 10px; font-size: 17px;">
+                            <% if (connection.requester_id._id.toString() === user_id.toString()) { %>
+                                <%= connection.receiver_id.fullname %>
+                              <% } else { %>
+                                <%= connection.requester_id.fullname %>
+                              <% } %>
+
+                        </p>
+                    </div>
+                </div>
+                <% }) %>
+
+        </div>
+
+
+        <div class="connection" id="PendingConnectionsDiv">
+            <h2>Pending Requests</h2>
+            <hr>
+
+            <% sentRequests.forEach(request=> { %>
+
+                <div class="connectionList">
+                    <div class="connectionData">
+                        <img src="/images/alt-user-profile.jpg" alt="">
+                        <p style="margin-top: 10px; font-size: 17px;">
+                            <%=request.receiver_id.fullname%>
+                        </p>
+                    </div>
+
+                    <div style=" display:flex; gap: 10px; margin-top: 10px;">
+                        <button onclick="acceptFriendRequest('<%= request._id %>')" class="acceptBtn">accept</button>
+                        <i onclick="rejectFriendRequest('<%= request._id %>')" class="fa-solid fa-xmark"></i>
+                    </div>
+
+
+                </div>
+                <% }) %>
+
+        </div>
+        <div class="connection" id="SentConnectionDiv">
+            <h2>Sent Requests</h2>
+            <hr>
+            <% requests.forEach(request=> { %>
+
+                <div class="connectionList">
+                    <div class="connectionData">
+                        <img src="/images/alt-user-profile.jpg" alt="">
+                        <p style="margin-top: 10px; font-size: 17px;">
+                            <%= request.requester_id.fullname %>
+                        </p>
+
+                    </div>
+
+                </div>
+                <% }) %>
+
+        </div>
+
+
+    </div>
+    <script src="/javascripts/connections.js"></script>
+</body>
+
+</html>
