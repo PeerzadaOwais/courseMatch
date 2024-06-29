@@ -185,8 +185,6 @@ footer {
   width: 300px;
   background-color: white;
   position: relative;
-  /* margin-left: 200px; */
-  /* border: 1px solid black; */
   border-radius: 10px;
 }
 .groups-div img {
@@ -212,17 +210,39 @@ footer {
   top: 20px;
   position: absolute;
 }
-.group-item{
+.group-item {
   cursor: pointer;
   border-radius: 15px;
   padding: 5px;
-
 }
-.group-item:hover{
-  transition: .5s;
+.group-item:hover {
+  transition: 0.5s;
   background-color: rgb(169, 237, 241);
 }
+.fa-ellipsis-vertical {
+  cursor: pointer;
+  color: #0b71b5;
+  float: right;
+  margin-right: 10px;
+  margin-top: 10px;
+  padding: 5px;
+}
 
-
-
-
+.removeDiv {
+  background-color: whitesmoke;
+  width: 100px;
+  height: 40px;
+  position: absolute;
+  border-radius: 10px;
+  font-size: 12px;
+  margin-left: 56%;
+  margin-top: -40px;
+  color: black;
+  text-align: center;
+  font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
+    "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
+}
+.removeDiv a {
+  text-decoration: none;
+  cursor: pointer;
+}

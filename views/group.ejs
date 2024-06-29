@@ -74,7 +74,21 @@
                             <span>
                                 <%=group.name%>
                             </span>
+                            <i onclick="propagation(event)" class="threeDot fa-solid fa-ellipsis-vertical"></i>
+                            <% if (group.creator._id.toString()===loggedInUser._id.toString()) { %>
+                                <div style="display: none;" class="removeDiv">
+                                    <a href="#" class="delete-group">Delete Group</a>
+                                    <a href="#" class="leave-group">Leave Group</a>
+                                </div>
+                                <% } else { %>
+                                    <div style="display: none;" class="removeDiv">
+                                        <a href="#" class="leave-group">Leave Group</a>
+                                    </div>
+                                    <% } %>
+
                         </li>
+
+
                         <hr>
 
                     </ul>

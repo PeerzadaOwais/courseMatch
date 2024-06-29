@@ -59,7 +59,7 @@ router.get("/groups", isLoggedIn, async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.render("group", { user});
+    res.render("group", { user, loggedInUser:user });
   } catch (error) {
     console.error("Error fetching user groups:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -77,7 +77,7 @@ router.post("/create", upload.single("picture"), async (req, res) => {
 
     const { name, description, members } = req.body;
     const membersArray = members ? members.split(",") : [];
-    
+
     // Use a Set to ensure unique members
     const uniqueMembersArray = [...new Set(membersArray)];
 
@@ -93,7 +93,7 @@ router.post("/create", upload.single("picture"), async (req, res) => {
       description,
       creator: user,
       picture: req.file ? req.file.filename : null,
-      members: [...uniqueMembersArray], 
+      members: [...uniqueMembersArray],
     });
 
     // Add the new group to the creator's groups if not already added
@@ -119,16 +119,74 @@ router.post("/create", upload.single("picture"), async (req, res) => {
   }
 });
 
-// Delete group route
-router.delete("/delete/:id", async (req, res) => {
+// Remove a member from a group
+router.post("/group/remove-member", async (req, res) => {
+  const { groupId, memberId } = req.body;
   try {
-    const groupId = req.params.id;
-    await GroupModel.findByIdAndDelete(groupId);
-    res.redirect("/groups"); // Redirect to groups page after deletion
+    const group = await GroupModel.findById(groupId);
+    if (!group) {
+      return res.status(404).send("Group not found");
+    }
+    // Ensure only admin can remove members
+    if (!group.creator.equals(req.user._id)) {
+      return res.status(403).send("Only admin can remove members");
+    }
+    group.members.pull(memberId);
+    await group.save();
+    await userModel.updateOne(
+      { _id: memberId },
+      { $pull: { groups: groupId } }
+    );
+    res.status(200).send("Member removed successfully");
   } catch (err) {
+    console.error(err);
     res.status(500).send("Server Error");
   }
 });
+
+// // Leave a group
+// router.post("/group/leave", async (req, res) => {
+//   const { groupId } = req.body;
+//   const userId = req.user._id;
+//   try {
+//     const group = await GroupModel.findById(groupId);
+//     if (!group) {
+//       return res.status(404).send("Group not found");
+//     }
+//     group.members.pull(userId);
+//     await group.save();
+//     await userModel.updateOne({ _id: userId }, { $pull: { groups: groupId } });
+//     res.status(200).send("Left the group successfully");
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).send("Server Error");
+//   }
+// });
+// Delete a group
+router.delete("/deleteGroup/:groupId", async (req, res) => {
+const groupId= req.params.groupId;
+  try {
+    const group = await GroupModel.findById(groupId);
+    if (!group) {
+      return res.status(404).send("Group not found");
+    }
+    // Ensure only admin can delete the group
+    if (!group.creator.equals(req.user._id)) {
+      return res.status(403).send(alert("Only admin can delete the group"));
+    }
+    await userModel.updateMany(
+      { _id: { $in: group.members } },
+      { $pull: { groups: groupId } }
+    );
+
+    await group.deleteOne(group);
+    res.send({ message: "Group deleted successfully" });
+  }  catch (err) {
+    console.error(err);
+    res.status(500).send({ message: "Error deleting group" });
+  }
+});
+
 // Route to get members of a specific group
 router.get("/groups/:groupId/members", async (req, res) => {
   try {
@@ -203,6 +261,7 @@ router.delete("/deletePost/:postId", isLoggedIn, async (req, res) => {
     //   await post.save();
     await user.save();
     // await post.save();
+    
     res.send({ message: "Post deleted successfully" });
   } catch (err) {
     console.error(err);
