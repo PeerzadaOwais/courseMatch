@@ -4,12 +4,11 @@ const plm = require("passport-local-mongoose");
 const groups = require("./groups");
 mongoose.connect("mongodb://127.0.0.1:27017/courseMatch");
 
-
 // Define the Entry Schema
 var EntrySchema = new mongoose.Schema({
-    school: String,
-    batch: String
-  });
+  school: String,
+  batch: String,
+});
 
 var UserSchema = new mongoose.Schema({
   username: {
@@ -49,17 +48,22 @@ var UserSchema = new mongoose.Schema({
   posts: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Post',
+      ref: "Post",
     },
   ],
-  groups:[
+  groups: [
     {
-      type:mongoose.Schema.Types.ObjectId,
-      ref: 'Group',
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Group",
     },
   ],
-
-  entries: [EntrySchema] // Array of sub-documents
+  friends: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+  entries: [EntrySchema], // Array of sub-documents
 });
 
 UserSchema.plugin(plm);

@@ -235,8 +235,7 @@ async function addMemberToGroup(userId) {
     });
 
     if (response.ok) {
-      // Update UI to reflect the new member
-      alert("Member added successfully");
+      location.reload(); 
     } else {
       alert("Failed to add member");
     }

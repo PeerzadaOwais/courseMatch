@@ -304,9 +304,14 @@ router.delete("/deletePost/:postId", isLoggedIn, async (req, res) => {
 });
 router.get("/searcht", async (req, res) => {
   try {
+     // Get the logged-in user's data
+     const user = await userModel.findOne({ username: req.session.passport.user });
     const searchQuery = req.query.q;
     const searchusers = await userModel
-      .find({ username: new RegExp(searchQuery, "i") })
+      .find({
+        _id: { $in: user.friends }, // Filter by friends
+        username: new RegExp(searchQuery, "i"),
+      })
       .select("username _id");
     res.json(searchusers);
   } catch (err) {
@@ -545,7 +550,7 @@ router.post("/rejectRequest", async (req, res) => {
 // Listing Requests and Connections
 router.get("/connections/:user_id", async (req, res) => {
   const { user_id } = req.params;
-
+  const user = await userModel.findOne({ username: req.session.passport.user });
   try {
     // Fetch accepted connections
     const connections = await ConnectionModel.find({
@@ -586,6 +591,20 @@ router.get("/connections/:user_id", async (req, res) => {
       requester_id: user_id,
       status: "pending",
     }).populate("receiver_id");
+    // Arrays to store connected user IDs
+    const connectedUserIds = [];
+
+    uniqueConnections.forEach((connection) => {
+      if (connection.requester_id._id.toString() === user_id) {
+        connectedUserIds.push(connection.receiver_id._id);
+      } else {
+        connectedUserIds.push(connection.requester_id._id);
+      }
+    });
+    // Update the user's friends array
+    await userModel.findByIdAndUpdate(user._id, {
+      $addToSet: { friends: { $each: connectedUserIds } },
+    });
 
     res.render("connections", {
       requests,
