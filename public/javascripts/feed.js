@@ -8,7 +8,6 @@ function toggleSearchResults() {
   mainContent.classList.toggle("blur-background");
   searchi();
 }
-
 // Function to simulate searching for matches
 function searchi() {
   var namee = document.getElementById("courses-input").value;

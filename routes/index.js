@@ -59,7 +59,7 @@ router.get("/groups", isLoggedIn, async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.render("group", { user, loggedInUser:user });
+    res.render("group", { user, loggedInUser: user });
   } catch (error) {
     console.error("Error fetching user groups:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -122,6 +122,7 @@ router.post("/create", upload.single("picture"), async (req, res) => {
 // Remove a member from a group
 router.post("/group/remove-member", async (req, res) => {
   const { groupId, memberId } = req.body;
+  console.log(groupId);
   try {
     const group = await GroupModel.findById(groupId);
     if (!group) {
@@ -144,27 +145,27 @@ router.post("/group/remove-member", async (req, res) => {
   }
 });
 
-// // Leave a group
-// router.post("/group/leave", async (req, res) => {
-//   const { groupId } = req.body;
-//   const userId = req.user._id;
-//   try {
-//     const group = await GroupModel.findById(groupId);
-//     if (!group) {
-//       return res.status(404).send("Group not found");
-//     }
-//     group.members.pull(userId);
-//     await group.save();
-//     await userModel.updateOne({ _id: userId }, { $pull: { groups: groupId } });
-//     res.status(200).send("Left the group successfully");
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).send("Server Error");
-//   }
-// });
+// Leave a group
+router.post("/group/leave", async (req, res) => {
+  const { groupId } = req.body;
+  const userId = req.user._id;
+  try {
+    const group = await GroupModel.findById(groupId);
+    if (!group) {
+      return res.status(404).send("Group not found");
+    }
+    group.members.pull(userId);
+    await group.save();
+    await userModel.updateOne({ _id: userId }, { $pull: { groups: groupId } });
+    res.status(200).send("Left the group successfully");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+});
 // Delete a group
 router.delete("/deleteGroup/:groupId", async (req, res) => {
-const groupId= req.params.groupId;
+  const groupId = req.params.groupId;
   try {
     const group = await GroupModel.findById(groupId);
     if (!group) {
@@ -181,12 +182,45 @@ const groupId= req.params.groupId;
 
     await group.deleteOne(group);
     res.send({ message: "Group deleted successfully" });
-  }  catch (err) {
+  } catch (err) {
     console.error(err);
     res.status(500).send({ message: "Error deleting group" });
   }
 });
+// Route to add a member to an existing group
+router.post("/group/add-member", async (req, res) => {
+  const { groupId, userId } = req.body;
 
+  try {
+    // Find the group by ID
+    const group = await GroupModel.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    // Check if the user is already a member
+    if (group.members.includes(userId)) {
+      return res.status(400).json({ message: "User is already a member" });
+    }
+    //  // Add the new group to each member's groups if not already added
+    //  await userModel.updateMany(
+    //   { _id: { $in: uniqueMembersArray } },
+    //   { $addToSet: { groups: newGroup._id } } // Use $addToSet to ensure uniqueness
+    // );
+    // Add group to user
+    await userModel.findByIdAndUpdate(userId, {
+      $addToSet: { groups: groupId },
+    });
+    // Add the user to the group's members list
+    group.members.push(userId);
+    await group.save();
+
+    res.status(200).json({ message: "Member added successfully" });
+  } catch (err) {
+    console.error("Error adding member:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 // Route to get members of a specific group
 router.get("/groups/:groupId/members", async (req, res) => {
   try {
@@ -261,7 +295,7 @@ router.delete("/deletePost/:postId", isLoggedIn, async (req, res) => {
     //   await post.save();
     await user.save();
     // await post.save();
-    
+
     res.send({ message: "Post deleted successfully" });
   } catch (err) {
     console.error(err);

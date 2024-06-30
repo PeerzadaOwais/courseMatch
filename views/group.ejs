@@ -12,7 +12,8 @@
 
 <body>
     <header>
-        <h1>Group Name</h1>
+        <h1 class="groupName"></h1>
+        <div class="description"></div>
         <nav>
             <ul>
                 <li><a href="/feed">Home</a></li>
@@ -36,12 +37,17 @@
 
     <main>
         <div id="message-container">
-            <section id="group-members">
-                <h2>Group Members</h2>
-                <div id="members-list">
-                    <!-- Members will be dynamically populated here -->
-                </div>
-            </section>
+            <div>
+                
+                <section id="group-members">
+                    <h2 >Group Members</h2>
+                    <div id="members-list">
+                        
+                        <!-- Members will be dynamically populated here -->
+                    </div>
+                </section>
+            </div>
+
 
             <div>
                 <section id="messages">
@@ -69,16 +75,19 @@
                 <hr>
                 <%user.groups.forEach(function(group){%>
                     <ul>
-                        <li class="group-item" data-group-id="<%= group._id %>">
-                            <img src="/images/uploads/<%=group.picture%>" alt="">
+                        <li class="group-item" data-group-id="<%= group._id %>" data-group-name="<%= group.name %>" data-group-description="<%=group.description%>">
+                           <a href="/images/uploads/<%=group.picture%>"><img src="/images/uploads/<%=group.picture%>" alt=""></a> 
                             <span>
-                                <%=group.name%>
+                                
+                                    <%=group.name%>
                             </span>
-                            <i onclick="propagation(event)" class="threeDot fa-solid fa-ellipsis-vertical"></i>
+                            <i class="threeDot fa-solid fa-ellipsis-vertical"></i>
                             <% if (group.creator._id.toString()===loggedInUser._id.toString()) { %>
                                 <div style="display: none;" class="removeDiv">
                                     <a href="#" class="delete-group">Delete Group</a>
                                     <a href="#" class="leave-group">Leave Group</a>
+                                    <!-- <button class="addMemberBtn">Add Members</button> -->
+
                                 </div>
                                 <% } else { %>
                                     <div style="display: none;" class="removeDiv">
