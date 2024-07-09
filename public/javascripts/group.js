@@ -64,10 +64,6 @@ document.addEventListener("DOMContentLoaded", () => {
                       : ""
                     : '<i class="threeDot fa-solid fa-ellipsis-vertical"></i>'
                 }
-                  
-
-
-                
                 <div style="display:none;" class="removeMemberDiv removeDiv">
                   <a href="#" class="remove-member" data-member-id="${
                     member._id

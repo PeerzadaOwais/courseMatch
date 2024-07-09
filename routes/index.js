@@ -1,21 +1,123 @@
 var express = require("express");
 var router = express.Router();
+const http = require("http");
+const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
 const upload = require("./multer");
 const userModel = require("./users");
 const PostModel = require("./posts");
+const messageModel = require("./messages");
+const mongoose = require("mongoose");
+const socketIo = require("socket.io");
 const CommentModel = require("./comment");
 const GroupModel = require("./groups");
+const nodemailer = require("nodemailer");
 const ConnectionModel = require("./connections");
-
+require("dotenv").config();
 const passport = require("passport");
 const localStrategy = require("passport-local");
 passport.use(new localStrategy(userModel.authenticate()));
+const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
+// Socket.io events
+io.on("connection", (socket) => {
+  console.log("New client connected");
+
+  socket.on("sendMessage", async ({ senderId, receiverId, content }) => {
+    const message = new messageModel({ senderId, receiverId, content });
+    await message.save();
+
+    io.emit("receiveMessage", message);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected");
+  });
+});
+// Nodemailer configuration
+const transporter = nodemailer.createTransport({
+  service: "Gmail",
+  secure: true,
+  port: 465,
+  auth: {
+    user: process.env.EMAIL,
+    pass: process.env.EMAIL_PASSWORD,
+  },
+});
+router.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+  const user = await userModel.findOne({ email });
+  if (!user) {
+    return res.status(400).send("No user with that email");
+  }
+  const token = crypto.randomBytes(20).toString("hex");
+  user.resetPasswordToken = token;
+  user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+  await user.save();
+
+  const mailOptions = {
+    to: user.email,
+    from: process.env.EMAIL,
+    subject: "Password Reset",
+    text: `Please click on the following link to reset your password:\n\nhttp://${req.headers.host}/reset/${token}\n\nIf you did not request this, please ignore this email.`,
+  };
+  transporter.sendMail(mailOptions, (err) => {
+    if (err) {
+      console.error("Error sending email:", err);
+      return res.status(500).send("Error sending email");
+    }
+    res.status(200).send("An email has been sent to " + user.email);
+  });
+});
+router.get("/reset/:token", async (req, res) => {
+  const user = await userModel.findOne({
+    resetPasswordToken: req.params.token,
+    resetPasswordExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return res
+      .status(400)
+      .send("Password reset token is invalid or has expired.");
+  }
+
+  res.render("resetpassword", { token: req.params.token });
+});
+
+router.post("/reset/:token", async (req, res) => {
+  try {
+    const user = await userModel.findOne({
+      resetPasswordToken: req.params.token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res
+        .status(400)
+        .send("Password reset token is invalid or has expired.");
+    }
+
+    // Using setPassword method
+    user.setPassword(req.body.password, async (err) => {
+      if (err) {
+        return res.status(500).send("Error setting password");
+      }
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+      await user.save();
+      res.send("Password has been reset successfully.");
+    });
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    res.status(500).send("Error resetting password");
+  }
+});
 
 /* GET home page. */
 router.get("/", function (req, res, next) {
   res.render("index", { title: "Express" });
 });
-
 router.get("/feeds", isLoggedIn, async function (req, res, next) {
   const user = await userModel
     .findOne({ username: req.session.passport.user })
@@ -33,7 +135,10 @@ router.get("/feeds", isLoggedIn, async function (req, res, next) {
     .sort({ createdAt: -1 }); // Fetch all posts and populate user details
   res.render("feeds", { user, posts, users, loggedInUser: user });
 });
-
+//route for render forgot password page
+router.get("/forgot-password", function (req, res, next) {
+  res.render("forgotpassword");
+});
 // Route to get groups for the logged-in user
 router.get("/groups", isLoggedIn, async (req, res) => {
   try {
@@ -46,15 +151,7 @@ router.get("/groups", isLoggedIn, async (req, res) => {
           path: "members creator",
         },
       });
-    // const users = await userModel
-    //   .find()
-    //   .populate("groups")
-    //   .populate({
-    //     path: "groups",
-    //     populate: {
-    //       path: "members creator",
-    //     },
-    //   });
+
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -197,16 +294,10 @@ router.post("/group/add-member", async (req, res) => {
     if (!group) {
       return res.status(404).json({ message: "Group not found" });
     }
-
     // Check if the user is already a member
     if (group.members.includes(userId)) {
       return res.status(400).json({ message: "User is already a member" });
     }
-    //  // Add the new group to each member's groups if not already added
-    //  await userModel.updateMany(
-    //   { _id: { $in: uniqueMembersArray } },
-    //   { $addToSet: { groups: newGroup._id } } // Use $addToSet to ensure uniqueness
-    // );
     // Add group to user
     await userModel.findByIdAndUpdate(userId, {
       $addToSet: { groups: groupId },
@@ -247,11 +338,9 @@ router.get("/groups/:groupId/messages", async (req, res) => {
     const group = await GroupModel.findById(groupId).populate(
       "messages.sender"
     );
-
     if (!group) {
       return res.status(404).json({ error: "Group not found" });
     }
-
     res.json(group.messages);
   } catch (error) {
     console.error("Error fetching group messages:", error);
@@ -281,21 +370,9 @@ router.delete("/deletePost/:postId", isLoggedIn, async (req, res) => {
     if (!post) {
       return res.status(404).send({ message: "Post not found" });
     }
-
-    // if (post.user.toString() !== user._id.toString()) {
-    //   return res
-    //     .status(403)
-    //     .send({ message: "You are not authorized to delete this post" });
-    // }
-    console.log(post);
     await post.deleteOne(post);
     user.posts.remove(post);
-    // await user.deleteOne(post);
-    //  await  post.remove();
-    //   await post.save();
     await user.save();
-    // await post.save();
-
     res.send({ message: "Post deleted successfully" });
   } catch (err) {
     console.error(err);
@@ -304,8 +381,10 @@ router.delete("/deletePost/:postId", isLoggedIn, async (req, res) => {
 });
 router.get("/searcht", async (req, res) => {
   try {
-     // Get the logged-in user's data
-     const user = await userModel.findOne({ username: req.session.passport.user });
+    // Get the logged-in user's data
+    const user = await userModel.findOne({
+      username: req.session.passport.user,
+    });
     const searchQuery = req.query.q;
     const searchusers = await userModel
       .find({
@@ -400,8 +479,15 @@ router.get("/userprofile/:id", isLoggedIn, async function (req, res) {
     populate: "comments",
   });
   const posts = await PostModel.find().populate("comments");
-  // const entries= await userModel.find(entries);
-  res.render("userprofile", { user, entries: user.entries, posts });
+  const messages = await messageModel
+    .find({
+      $or: [
+        { senderId: req.user._id, receiverId: user._id },
+        { senderId: user._id, receiverId: req.user._id },
+      ],
+    })
+    .populate("senderId receiverId");
+  res.render("userprofile", { user, entries: user.entries, posts, messages });
 });
 
 router.post("/saveEntries", isLoggedIn, async function (req, res) {
@@ -489,7 +575,6 @@ router.post("/sendRequest", async (req, res) => {
       // If a connection already exists, respond with a message indicating so
       return res.status(400).send("Connection already exists");
     }
-
     // If no existing connection, create a new one
     const connection = new ConnectionModel({
       requester_id,
@@ -515,16 +600,6 @@ router.post("/acceptRequest", async (req, res) => {
     if (connection) {
       connection.status = "accepted";
       await connection.save();
-
-      // Create a reverse connection for bidirectional visibility
-      // const reverseConnection = new ConnectionModel({
-      //   requester_id: connection.receiver_id,
-      //   receiver_id: connection.requester_id,
-      //   status: "accepted",
-      // });
-
-      // await reverseConnection.save();
-
       res.status(200).send("Friend request accepted");
     } else {
       res.status(404).send("Connection not found");
@@ -578,19 +653,19 @@ router.get("/connections/:user_id", async (req, res) => {
         uniqueConnections.push(connection);
       }
     });
-    // console.log(connectionSet);
-
     // Fetch pending requests
     const requests = await ConnectionModel.find({
       receiver_id: user_id,
       status: "pending",
     }).populate("requester_id");
 
-    // Fetch sent requests
+    // Fetch sent requests excluding those already connected
     const sentRequests = await ConnectionModel.find({
       requester_id: user_id,
       status: "pending",
+      // receiver_id: { $nin: connectionSet },
     }).populate("receiver_id");
+
     // Arrays to store connected user IDs
     const connectedUserIds = [];
 
@@ -617,7 +692,6 @@ router.get("/connections/:user_id", async (req, res) => {
   }
 });
 
-module.exports = router;
 router.get("/profile", isLoggedIn, async function (req, res, next) {
   const user = await userModel
     .findOne({ username: req.session.passport.user })
@@ -634,19 +708,30 @@ router.get("/profile", isLoggedIn, async function (req, res, next) {
 router.get("/login", function (req, res, next) {
   res.render("login");
 });
-router.post("/register", function (req, res) {
-  const userData = new userModel({
-    username: req.body.username,
-    email: req.body.email,
-    fullname: req.body.fullname,
-  });
-  userModel.register(userData, req.body.password).then(function () {
-    passport.authenticate("local")(req, res, function () {
-      res.redirect("/feed");
-    });
-  });
-});
 
+router.post("/register", async function (req, res) {
+  const { fullname, email, username, password } = req.body;
+
+  try {
+    let user = await userModel.findOne({ email });
+    if (user) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+    const userData = new userModel({
+      username,
+      email,
+      fullname,
+    });
+    userModel.register(userData, password).then(function () {
+      passport.authenticate("local")(req, res, function () {
+        res.redirect("/feed");
+      });
+    });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("Server error");
+  }
+});
 router.post(
   "/fileupload",
   isLoggedIn,
@@ -734,6 +819,6 @@ router.get("/logout", function (req, res) {
 });
 function isLoggedIn(req, res, next) {
   if (req.isAuthenticated()) return next();
-  res.redirect("/");
+  res.redirect("/login");
 }
 module.exports = router;

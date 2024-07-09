@@ -111,7 +111,7 @@
                 <%user.posts.forEach(function(post){ %>
 
                     <div class="feedContent">
-                       
+
                         <p class="postContent">
                             <%=post.content%>
 
@@ -125,26 +125,26 @@
                         <div style="display: none;" class="comment-section">
                             <% post.comments.forEach(function(comment){ %>
 
-                            <div>
-                                <div style="display: flex; gap: 10px;margin-top: 10px;">
-                                    <img src="/images/uploads<%=comment.profileImage%>" alt="">
-                                    <p>
-                                        <%=comment.fullname%>
-
-                                    </p>
-                                </div>
                                 <div>
-                                    <p>
-                                        <%=comment.content %>
+                                    <div style="display: flex; gap: 10px;margin-top: 10px;">
+                                        <img src="/images/uploads<%=comment.profileImage%>" alt="">
+                                        <p>
+                                            <%=comment.fullname%>
+
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p>
+                                            <%=comment.content %>
+
+                                        </p>
+                                    </div>
+                                    <p class="timeDiv">
+                                        <%=comment.createdAt%>
 
                                     </p>
                                 </div>
-                                <p class="timeDiv">
-                                    <%=comment.createdAt%>
-
-                                </p>
-                            </div>
-                            <% }); %>
+                                <% }); %>
 
 
                         </div>
@@ -169,23 +169,22 @@
             <div style="margin-bottom: 0px;" class="message-box"><span class="heading-message-div"><strong>Message to
                         <%=user.username%>
                     </strong></span>
-
-                <div class="chat-box">
-                    <div class="message sender">
-                        <p>Hello there!</p>
-                    </div>
-                    <div class="message receiver">
-                        <p>Hi! How can I help you?</p>
-                    </div>
-                    <div class="message sender">
-                        <p>I need assistance with a coding problem.</p>
-                    </div>
-                    <div class="message receiver">
-                        <p>Sure, I'd be happy to help.</p>
-                    </div>
-                    <!-- Add more messages here -->
+                <div class="chat-box" id="chat-box">
+                    <% messages.forEach(function(message) { %>
+                        <div
+                            class="message <%= message.senderId._id.toString() === user._id.toString() ? 'sender' : 'receiver' %>">
+                            <p>
+                                <%= message.content %>
+                            </p>
+                        </div>
+                        <% }); %>
                 </div>
-
+                <form id="message-form">
+                    <input type="hidden" id="senderId" value="<%= user._id %>">
+                    <input type="hidden" id="receiverId" value="<%= user._id %>">
+                    <input type="text" id="message-input" placeholder="Type a message...">
+                    <button type="submit">Send</button>
+                </form>
             </div>
         </div>
     </main>
@@ -193,7 +192,30 @@
     <footer>
         <!-- Footer content, like copyright information -->
     </footer>
-<script src="/javascripts/userprofile.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        document.getElementById("message-form").addEventListener("submit", function () {
+            const senderId = document.getElementById("senderId").value;
+            const receiverId = document.getElementById("receiverId").value;
+            const content = document.getElementById("message-input").value;
+
+            socket.emit("sendMessage", { senderId, receiverId, content });
+
+            document.getElementById("message-input").value = "";
+        });
+
+        socket.on("receiveMessage", function (message) {
+            const chatBox = document.getElementById("chat-box");
+            const messageElement = document.createElement("div");
+            messageElement.classList.add("message", message.senderId === document.getElementById("senderId").value ? "sender" : "receiver");
+            messageElement.innerHTML = `<p>${message.content}</p>`;
+            chatBox.appendChild(messageElement);
+        });
+    </script>
+
+    <script src="/javascripts/userprofile.js"></script>
 </body>
 
 </html>

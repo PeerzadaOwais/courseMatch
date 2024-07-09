@@ -27,7 +27,7 @@
                 <li><a href="/about">About</a></li>
                 <li><a href="/contact">ContactUs</a></li>
                 <li class="dropdown">
-                    <a href="/profile"><button style="font-size: 16px; margin-top: -30px; margin-left: -5px;"
+                    <a href="/profile"><button style="font-size: 16px; margin-top: -30px; margin-left: -5px;background-color: #37297b;"
                             class="dropbtn"><strong>Profile</strong></button></a>
                     <div class="dropdown-content">
                         <a href="#">Settings</a>
@@ -71,20 +71,13 @@
     <main>
 
 
-        <section style="background-color: #e2e6e8; ">
-
-            <!-- <img src="img1.jpg" alt="loading"> -->
-            <div style="padding: 20px; font-size: 20px;">Hi&nbsp; <%=user.fullname%>
-            </div>
-
-            <div id="hero">
-                <h2>Welcome to Course Match</h2>
-                <p>Connect with friends who share similar courses and interests.</p>
-            </div>
-
+        <section id="hero">
+            <span style="display: table;">Hi&nbsp; <%=user.fullname%></span>
+            <h2 style="margin-top: -10px;">Welcome to Course Match</h2>
+            <p id="animated-text">Connect with friends who share similar courses and interests.</p>
         </section>
 
-        <section id="search-match">
+        <section id="search-match" style="background-color: rgb(187, 180, 255);">
             <h3>Find Your Matches</h3>
             <form>
                 <label for="courses-input">Search by name, school, college, university, class or stream</label>
@@ -108,7 +101,7 @@
 
         </div> -->
         <section id="featured">
-            <h3>People you may know</h3>
+            <h3>People based on your interests</h3>
 
 
 

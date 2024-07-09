@@ -187,3 +187,19 @@ function selectMember(searchuser) {
     selectedMembers.appendChild(div);
   }
 }
+document.addEventListener('DOMContentLoaded', () => {
+  const textElement = document.getElementById('animated-text');
+  const text = textElement.innerText;
+  textElement.innerHTML = '';
+
+  text.split('').forEach((char, index) => {
+    const span = document.createElement('span');
+    span.innerText = char;
+    span.classList.add('letter');
+    textElement.appendChild(span);
+
+    setTimeout(() => {
+      span.style.opacity = 1;
+    }, 60 * index);
+  });
+});
