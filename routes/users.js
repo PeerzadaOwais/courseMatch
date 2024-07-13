@@ -50,6 +50,9 @@ var UserSchema = new mongoose.Schema({
   profileImage: {
     type: String, // Assuming you store the profile picture URL as a string
   },
+  is_online:{
+    type:Number,
+  },
   posts: [
     {
       type: mongoose.Schema.Types.ObjectId,

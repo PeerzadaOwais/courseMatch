@@ -174,47 +174,48 @@ main {
 .feed-history:hover {
   overflow-y: auto;
 }
-.message-box {
+#message-box {
   /* padding: 20px; */
   overflow-y: hidden;
   width: 50%;
   background-color: white;
   height: 400px;
 }
-.message-box:hover {
+#message-box:hover {
   overflow-y: auto;
   /* transition: 2s; */
 }
 
 .heading-message-div {
-  margin-top: -30px;
+  margin-top: -60px;
   position: absolute;
+  margin-left: -20px;
   font-size: 20px;
 }
 
-.chat-box {
+/* .chat-box {
   padding: 20px;
-}
+} */
 
-.message {
+/* .message {
   margin-bottom: 10px;
   padding: 10px;
   border-radius: 10px;
   max-width: 70%;
   clear: both;
-}
+} */
 
-.sender {
+/* .sender {
   background-color: #4caf50;
   color: white;
   float: left;
-}
+} */
 
-.receiver {
+/* .receiver {
   background-color: #008cba;
   color: white;
   float: right;
-}
+} */
 .feedHistory {
   overflow-y: auto;
   background-color: white;
@@ -264,4 +265,20 @@ main {
 .comment-btn:hover {
   background-color: #2980b9;
   transition: 0.5s;
+}
+#message-box {
+background-color: #1080cb;
+}
+.current-user-chat {
+ text-align: right;
+ background-color: green;
+ margin-top: 10px;
+}
+.distance-user-chat {
+ text-align: left;
+ background-color: beige;
+
+}
+#chat-form{
+  float: right;
 }

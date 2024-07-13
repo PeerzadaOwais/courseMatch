@@ -1,6 +1,4 @@
 const mongoose = require("mongoose");
-const passport = require("passport");
-const plm = require("passport-local-mongoose");
 mongoose.connect("mongodb://127.0.0.1:27017/courseMatch");
 const messageSchema = new mongoose.Schema({
     senderId: {
@@ -11,14 +9,15 @@ const messageSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User", 
     },
-    content: {
+    message: {
         type: String,
-        required: true
+    },
+    file: {
+        type: String,
     },
     createdAt: {
         type: Date,
         default: Date.now
     }
 });
-messageSchema.plugin(plm);
 module.exports = mongoose.model('Message', messageSchema);

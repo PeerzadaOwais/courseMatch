@@ -9,7 +9,14 @@
     <link rel="stylesheet" href="/stylesheets/feed.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link rel="icon" type="image/png" href="/images/group.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.js"
+    integrity="sha512-VJ6+sp2E5rFQk05caiXXzQd1wBABpjEj1r5kMiLmGAAgwPItw1YpqsCCBtq8Yr1x6C49/mTpRdXtq8O2RcZhlQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="/socket.io/socket.io.js"></script>
+
+
 </head>
+
 
 <body>
     <header>
@@ -27,7 +34,8 @@
                 <li><a href="/about">About</a></li>
                 <li><a href="/contact">ContactUs</a></li>
                 <li class="dropdown">
-                    <a href="/profile"><button style="font-size: 16px; margin-top: -30px; margin-left: -5px;background-color: #37297b;"
+                    <a href="/profile"><button
+                            style="font-size: 16px; margin-top: -30px; margin-left: -5px;background-color: #37297b;"
                             class="dropbtn"><strong>Profile</strong></button></a>
                     <div class="dropdown-content">
                         <a href="#">Settings</a>
@@ -41,7 +49,6 @@
         </nav>
     </header>
     <div id="group" hidden>
-
         <h1>Create a New Group</h1>
         <form id="groupForm" action="/create" method="post" enctype="multipart/form-data">
             <div>
@@ -66,11 +73,8 @@
 
             <button type="submit">Create Group</button>
         </form>
-
     </div>
     <main>
-
-
         <section id="hero">
             <span style="display: table;">Hi&nbsp; <%=user.fullname%></span>
             <h2 style="margin-top: -10px;">Welcome to Course Match</h2>
@@ -85,21 +89,6 @@
                 <button type="button" onclick="toggleSearchResults()">Find Matches</button>
             </form>
         </section>
-        <!-- <div class="card-container">
-            <img src="/images/alt-user-profile.jpg" alt="">
-            <div class="info">
-                <a href="">
-                    <h3>peer owais</h3>
-                </a>
-                <p>stream</p>
-                <p>university</p>
-                <button class="connect-button">comment</button>
-            </div>
-        </div> -->
-        <!-- <div class="card-container">
-            <button class="connect-button" onclick="toggleFunction(this,'<%= users._id %>', '<%= user._id %>')"></button>
-
-        </div> -->
         <section id="featured">
             <h3>People based on your interests</h3>
 
@@ -140,6 +129,13 @@
         <p>&copy; 2024 Course Match</p>
     </footer>
 
+    <script>
+        var socket = io('/user-namespace', {
+            auth: {
+                token: '<%=user._id%>'
+            }
+        });
+    </script>
     <script src="javascripts/feed.js"></script>
 </body>
 

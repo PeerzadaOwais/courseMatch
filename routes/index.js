@@ -1,6 +1,5 @@
 var express = require("express");
 var router = express.Router();
-const http = require("http");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const upload = require("./multer");
@@ -8,7 +7,6 @@ const userModel = require("./users");
 const PostModel = require("./posts");
 const messageModel = require("./messages");
 const mongoose = require("mongoose");
-const socketIo = require("socket.io");
 const CommentModel = require("./comment");
 const GroupModel = require("./groups");
 const nodemailer = require("nodemailer");
@@ -17,24 +15,6 @@ require("dotenv").config();
 const passport = require("passport");
 const localStrategy = require("passport-local");
 passport.use(new localStrategy(userModel.authenticate()));
-const app = express();
-const server = http.createServer(app);
-const io = socketIo(server);
-// Socket.io events
-io.on("connection", (socket) => {
-  console.log("New client connected");
-
-  socket.on("sendMessage", async ({ senderId, receiverId, content }) => {
-    const message = new messageModel({ senderId, receiverId, content });
-    await message.save();
-
-    io.emit("receiveMessage", message);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("Client disconnected");
-  });
-});
 // Nodemailer configuration
 const transporter = nodemailer.createTransport({
   service: "Gmail",
@@ -118,6 +98,7 @@ router.post("/reset/:token", async (req, res) => {
 router.get("/", function (req, res, next) {
   res.render("index", { title: "Express" });
 });
+
 router.get("/feeds", isLoggedIn, async function (req, res, next) {
   const user = await userModel
     .findOne({ username: req.session.passport.user })
@@ -164,57 +145,62 @@ router.get("/groups", isLoggedIn, async (req, res) => {
 });
 
 // group route
-router.post("/create", upload.single("picture"), async (req, res) => {
-  const username = req.session.passport.user;
-  try {
-    const user = await userModel.findOne({ username });
-    if (!user) {
-      return res.status(404).send("User not found");
+router.post(
+  "/create",
+  isLoggedIn,
+  upload.single("picture"),
+  async (req, res) => {
+    const username = req.session.passport.user;
+    try {
+      const user = await userModel.findOne({ username });
+      if (!user) {
+        return res.status(404).send("User not found");
+      }
+
+      const { name, description, members } = req.body;
+      const membersArray = members ? members.split(",") : [];
+
+      // Use a Set to ensure unique members
+      const uniqueMembersArray = [...new Set(membersArray)];
+
+      // Check if the group name already exists for the user
+      const existingGroup = await GroupModel.findOne({ name, creator: user });
+      if (existingGroup) {
+        return res.status(400).send("Group with this name already exists");
+      }
+
+      // Create the new group
+      const newGroup = new GroupModel({
+        name,
+        description,
+        creator: user,
+        picture: req.file ? req.file.filename : null,
+        members: [...uniqueMembersArray],
+      });
+
+      // Add the new group to the creator's groups if not already added
+      if (!user.groups.includes(newGroup._id)) {
+        user.groups.push(newGroup._id);
+      }
+
+      // Save the user with updated groups
+      await user.save();
+
+      // Add the new group to each member's groups if not already added
+      await userModel.updateMany(
+        { _id: { $in: uniqueMembersArray } },
+        { $addToSet: { groups: newGroup._id } } // Use $addToSet to ensure uniqueness
+      );
+
+      // Save the new group
+      await newGroup.save();
+      res.redirect("/groups"); // Redirect to groups page after creation
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Server Error");
     }
-
-    const { name, description, members } = req.body;
-    const membersArray = members ? members.split(",") : [];
-
-    // Use a Set to ensure unique members
-    const uniqueMembersArray = [...new Set(membersArray)];
-
-    // Check if the group name already exists for the user
-    const existingGroup = await GroupModel.findOne({ name, creator: user });
-    if (existingGroup) {
-      return res.status(400).send("Group with this name already exists");
-    }
-
-    // Create the new group
-    const newGroup = new GroupModel({
-      name,
-      description,
-      creator: user,
-      picture: req.file ? req.file.filename : null,
-      members: [...uniqueMembersArray],
-    });
-
-    // Add the new group to the creator's groups if not already added
-    if (!user.groups.includes(newGroup._id)) {
-      user.groups.push(newGroup._id);
-    }
-
-    // Save the user with updated groups
-    await user.save();
-
-    // Add the new group to each member's groups if not already added
-    await userModel.updateMany(
-      { _id: { $in: uniqueMembersArray } },
-      { $addToSet: { groups: newGroup._id } } // Use $addToSet to ensure uniqueness
-    );
-
-    // Save the new group
-    await newGroup.save();
-    res.redirect("/groups"); // Redirect to groups page after creation
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Server Error");
   }
-});
+);
 
 // Remove a member from a group
 router.post("/group/remove-member", async (req, res) => {
@@ -473,21 +459,28 @@ router.get("/profile/:id", isLoggedIn, async function (req, res) {
   res.render("profile", { user, entries: user.entries });
 });
 router.get("/userprofile/:id", isLoggedIn, async function (req, res) {
+  const currentUser = await userModel.findOne({
+    username: req.session.passport.user,
+  });
   const user_id = req.params.id;
   const user = await userModel.findById(user_id).populate("posts").populate({
     path: "posts",
     populate: "comments",
   });
   const posts = await PostModel.find().populate("comments");
-  const messages = await messageModel
-    .find({
-      $or: [
-        { senderId: req.user._id, receiverId: user._id },
-        { senderId: user._id, receiverId: req.user._id },
-      ],
-    })
-    .populate("senderId receiverId");
-  res.render("userprofile", { user, entries: user.entries, posts, messages });
+  const chats = await messageModel.find({
+    $or: [
+      { senderId: user._id, receiverId: currentUser._id },
+      { senderId: currentUser._id, receiverId: user._id },
+    ],
+  });
+  res.render("userprofile", {
+    currentUser,
+    user,
+    entries: user.entries,
+    posts,
+    chats,
+  });
 });
 
 router.post("/saveEntries", isLoggedIn, async function (req, res) {
@@ -543,6 +536,7 @@ router.get("/feed", async function (req, res, next) {
 
   res.render("feed", { user, matchingUsers, users });
 });
+
 router.get("/user", async function (req, res, next) {
   const user = await userModel.findOne({
     username: req.session.passport.user,
@@ -743,6 +737,45 @@ router.post(
     user.profileImage = req.file.filename;
     await user.save();
     res.redirect("/profile");
+  }
+);
+
+router.post(
+  "/uploadChatFile",
+  isLoggedIn,
+  upload.single("file"),
+  async (req, res) => {
+    const { sender_id, receiver_id, message } = req.body;
+    const file = req.file;
+
+    if (!sender_id || !receiver_id) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Sender or receiver ID missing" });
+    }
+
+    try {
+      let newChat = {
+        senderId: sender_id,
+        receiverId: receiver_id,
+      };
+
+      if (message) {
+        newChat.message = message;
+      }
+
+      if (file) {
+        newChat.file = file.filename;
+      }
+
+      const chatMessage = new messageModel(newChat);
+      await chatMessage.save();
+
+      res.status(200).json({ success: true, data: chatMessage });
+    } catch (error) {
+      console.error("Error:", error);
+      res.status(500).json({ success: false, message: "Server error" });
+    }
   }
 );
 

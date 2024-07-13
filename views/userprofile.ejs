@@ -5,24 +5,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile</title>
-
-
     <link rel="stylesheet" href="/stylesheets/userprofile.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.js"
+        integrity="sha512-VJ6+sp2E5rFQk05caiXXzQd1wBABpjEj1r5kMiLmGAAgwPItw1YpqsCCBtq8Yr1x6C49/mTpRdXtq8O2RcZhlQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="/socket.io/socket.io.js"></script>
 
 </head>
 
 <body>
     <header>
-
-
         <div>
             <h1 style="font-size: 34px;">Course Match</h1>
         </div>
         <nav>
             <ul>
-
                 <li><a href="/feed">Home</a></li>
                 <li><a href="/courses">Courses</a></li>
                 <li><a href="/profile">Profile</a></li>
@@ -31,24 +29,12 @@
             </ul>
         </nav>
     </header>
-
-
-
-
-
-
     <main>
         <section class="profile-details">
-
             <div class="user-info">
-
-
                 <a href="/images/uploads/<%=user.profileImage%>">
                     <img src="/images/uploads/<%=user.profileImage%>" alt="">
                 </a>
-
-
-
                 <div class="details">
                     <h2>
                         <%=user.fullname%>
@@ -64,6 +50,13 @@
                     </p>
                     <!-- Add more user details here -->
                 </div>
+                <% if(user.is_online===1){ %>
+                    <span style="margin-left: 75%;margin-bottom: 80px;color: green;" class="online_status"
+                        id="<%=user._id%>-status">online</span>
+                    <% } else { %>
+                        <span style="margin-left: 75%;margin-bottom: 80px;color: red;" class="offline_status"
+                            id="<%=user._id%>-status">offline</span>
+                        <% } %>
             </div>
         </section>
         <div class="outer">
@@ -103,18 +96,14 @@
                                 <% } %>
             </div>
         </div>
-
         <div class="message-div">
-
             <div class="feedHistory">
                 <h2>Feed History</h2>
                 <%user.posts.forEach(function(post){ %>
 
                     <div class="feedContent">
-
                         <p class="postContent">
                             <%=post.content%>
-
                         </p>
                         <div style="display: flex; justify-content: space-between; margin-top: 20px;">
                             <button class="comment-btn">comments</button>
@@ -130,89 +119,155 @@
                                         <img src="/images/uploads<%=comment.profileImage%>" alt="">
                                         <p>
                                             <%=comment.fullname%>
-
                                         </p>
                                     </div>
                                     <div>
                                         <p>
                                             <%=comment.content %>
-
                                         </p>
                                     </div>
                                     <p class="timeDiv">
                                         <%=comment.createdAt%>
-
                                     </p>
                                 </div>
                                 <% }); %>
-
-
                         </div>
                     </div>
                     <% }); %>
-
             </div>
-            <!-- <div class="feed-history"><span class="heading-message-div"><strong>Your Feed</strong></span>
-                <div class="feed">
-                    <div class="feed-item">
-                        <img src="https://via.placeholder.com/150" alt="Placeholder Image">
-                        <div class="feed-content">
-                            <h3>Post Title 1</h3>
-                            <p>This is the content of post 1...</p>
-                            <span class="date">Posted on: May 1, 2024</span>
-                        </div>
-                    </div>
+            <div id="message-box">
 
-                    Add more feed items here -->
-            <!-- </div>
-            </div> -->
-            <div style="margin-bottom: 0px;" class="message-box"><span class="heading-message-div"><strong>Message to
-                        <%=user.username%>
-                    </strong></span>
-                <div class="chat-box" id="chat-box">
-                    <% messages.forEach(function(message) { %>
-                        <div
-                            class="message <%= message.senderId._id.toString() === user._id.toString() ? 'sender' : 'receiver' %>">
+                <span class="heading-message-div">
+                    <strong>Message to <%= user.username %></strong>
+                </span>
+                <% chats.forEach(function(chat) { %>
+
+                    <% if (chat.senderId.toString()===currentUser._id.toString()) { %>
+
+                        <div class="current-user-chat" data-id="<%= chat._id %>">
                             <p>
-                                <%= message.content %>
+                                <%= chat.message %>
                             </p>
+                            <a href="/images/uploads/<%= chat.file %>" download>
+                                <%= chat.file %>
+                            </a>
                         </div>
-                        <% }); %>
-                </div>
-                <form id="message-form">
-                    <input type="hidden" id="senderId" value="<%= user._id %>">
-                    <input type="hidden" id="receiverId" value="<%= user._id %>">
-                    <input type="text" id="message-input" placeholder="Type a message...">
-                    <button type="submit">Send</button>
-                </form>
+                        <% } else { %>
+                            <div class="distance-user-chat">
+                                <p>
+                                    <%= chat.message %>
+                                </p>
+                                <a href="/uploads/<%= chat.file %>" download>
+                                    <%= chat.file %>
+                                </a>
+                            </div>
+                            <% }; %>
+                                <% }); %>
             </div>
         </div>
+        <form onsubmit="submitMessage(event)" enctype="multipart/form-data">
+            <input type="text" name="message" placeholder="enter message" id="message-input">
+            <input type="file" name="file" id="file-input">
+            <button type="submit" value="send message" class="btn btn-primary"></button>
+        </form>
     </main>
-
     <footer>
-        <!-- Footer content, like copyright information -->
     </footer>
-    <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        var sender_id = '<%=currentUser._id%>';
+        var receiver_id = '<%=user._id%>';
 
-        document.getElementById("message-form").addEventListener("submit", function () {
-            const senderId = document.getElementById("senderId").value;
-            const receiverId = document.getElementById("receiverId").value;
-            const content = document.getElementById("message-input").value;
-
-            socket.emit("sendMessage", { senderId, receiverId, content });
-
-            document.getElementById("message-input").value = "";
+        var socket = io('/user-namespace', {
+            auth: {
+                token: '<%=currentUser._id%>'
+            }
         });
 
-        socket.on("receiveMessage", function (message) {
-            const chatBox = document.getElementById("chat-box");
-            const messageElement = document.createElement("div");
-            messageElement.classList.add("message", message.senderId === document.getElementById("senderId").value ? "sender" : "receiver");
-            messageElement.innerHTML = `<p>${message.content}</p>`;
-            chatBox.appendChild(messageElement);
+        // Update online users
+        socket.on('getOnlineUser', function (data) {
+            var onlineUsers = document.getElementById('<%=user._id%>-status');
+            onlineUsers.innerHTML = 'online';
         });
+
+        socket.on('getofflineUser', function (data) {
+            var offlineUsers = document.getElementById('<%=user._id%>-status');
+            offlineUsers.innerHTML = 'offline';
+        });
+
+        function scrollToBottom() {
+            var chatContainer = document.getElementById("message-box");
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function submitMessage(event) {
+            event.preventDefault();
+
+            var messageInput = document.getElementById("message-input");
+            var message = messageInput.value;
+            var fileInput = document.getElementById("file-input");
+            var formData = new FormData();
+            formData.append('sender_id', sender_id);
+            formData.append('receiver_id', receiver_id);
+
+            if (messageInput.value) {
+                formData.append('message', messageInput.value);
+
+            }
+
+            if (fileInput.files.length > 0) {
+                formData.append('file', fileInput.files[0]);
+                console.log(fileInput);
+            }
+
+            fetch('/uploadChatFile', {
+                method: 'post',
+                body: formData
+            })
+                .then((response) => response.json())
+                .then((response) => {
+                    if (response.success) {
+                        messageInput.value = '';
+                        fileInput.value = '';
+                        var chatContainer = document.getElementById("message-box");
+                        var newMessage = document.createElement("div");
+                        newMessage.className = "current-user-chat";
+                        newMessage.setAttribute("data-id", response.data._id);
+                        newMessage.innerHTML = `<p>${response.data.message}</p>`;
+
+                        if (response.data.file) {
+                            newMessage.innerHTML = `<a href="/images/uploads/${response.data.file}" download>${response.data.file}</a>`;
+                        }
+
+                        chatContainer.appendChild(newMessage);
+                        scrollToBottom();
+                        socket.emit('newChat', { message: response.data.message, sender_id: sender_id, receiver_id: receiver_id, file: response.data.file });
+                    } else {
+                        console.error('Server responded with an error:', response.message);
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        }
+
+        socket.on('loadNewChat', function (data) {
+            if (sender_id == data.receiver_id && receiver_id == data.sender_id) {
+
+                var chatContainer = document.getElementById("message-box");
+                var newMessage = document.createElement("div");
+                newMessage.className = "distance-user-chat";
+                newMessage.setAttribute("data-id", data._id);
+                let chat = data.message;
+                document.getElementById("message-box").append(chat);
+                if (data.file) {
+                    newMessage.innerHTML = `<a href="/images/uploads/${data.file}" download>${data.file}</a>`;
+                }
+                chatContainer.appendChild(newMessage);
+                scrollToBottom();
+            }
+        });
+        window.onload = scrollToBottom;
+
     </script>
 
     <script src="/javascripts/userprofile.js"></script>
