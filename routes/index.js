@@ -14,7 +14,10 @@ const ConnectionModel = require("./connections");
 require("dotenv").config();
 const passport = require("passport");
 const localStrategy = require("passport-local");
+const { group } = require("console");
 passport.use(new localStrategy(userModel.authenticate()));
+router.use(express.json());
+
 // Nodemailer configuration
 const transporter = nodemailer.createTransport({
   service: "Gmail",
@@ -86,7 +89,15 @@ router.post("/reset/:token", async (req, res) => {
       user.resetPasswordToken = undefined;
       user.resetPasswordExpires = undefined;
       await user.save();
-      res.send("Password has been reset successfully.");
+      // Sending response with a login button
+      res.send(`
+  <html>
+    <body>
+      <p>Password has been reset successfully.</p>
+      <a href="/login"><button>Login again</button></a>
+    </body>
+  </html>
+`);
     });
   } catch (error) {
     console.error("Error resetting password:", error);
@@ -136,7 +147,11 @@ router.get("/groups", isLoggedIn, async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-
+    const chats = await messageModel.find({
+      
+         senderId: user._id, groupId: group._id ,
+      
+    });
     res.render("group", { user, loggedInUser: user });
   } catch (error) {
     console.error("Error fetching user groups:", error);
@@ -205,7 +220,7 @@ router.post(
 // Remove a member from a group
 router.post("/group/remove-member", async (req, res) => {
   const { groupId, memberId } = req.body;
-  console.log(groupId);
+  // console.log(groupId);
   try {
     const group = await GroupModel.findById(groupId);
     if (!group) {
@@ -316,23 +331,50 @@ router.get("/groups/:groupId/members", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+router.post("/uploadGroupMessage", upload.single("file"), async (req, res) => {
+  const { message, senderId, groupId } = req.body;
+  const file = req.file ? req.file.filename : null;
 
-// Route to get messages of a specific group
-router.get("/groups/:groupId/messages", async (req, res) => {
+  const newMessage = new messageModel({
+    message: message,
+    senderId: senderId,
+    groupId: groupId,
+    file: file,
+    createdAt: new Date(),
+  });
+// console.log(newMessage);
+  await newMessage.save();
+  const populatedMessage = await newMessage.populate("senderId", "username");
+  res.status(200).json({ success: true, data: {message,senderId,populatedMessage}});
+  
+});
+// Fetch messages for a specific group
+router.get('/groups/:groupId/messages', async (req, res) => {
   try {
-    const groupId = req.params.groupId;
-    const group = await GroupModel.findById(groupId).populate(
-      "messages.sender"
-    );
-    if (!group) {
-      return res.status(404).json({ error: "Group not found" });
-    }
-    res.json(group.messages);
+      const { groupId } = req.params;
+      const messages = await messageModel.find({ groupId }).populate('senderId').sort({ createdAt: 1 });
+      // console.log(messages);
+      res.json(messages);
   } catch (error) {
-    console.error("Error fetching group messages:", error);
-    res.status(500).json({ error: "Internal server error" });
+      res.status(500).json({ error: 'Failed to fetch messages' });
   }
 });
+// Route to get messages of a specific group
+// router.get("/groups/:groupId/messages", async (req, res) => {
+//   try {
+//     const groupId = req.params.groupId;
+//     const group = await GroupModel.findById(groupId).populate(
+//       "messages.sender"
+//     );
+//     if (!group) {
+//       return res.status(404).json({ error: "Group not found" });
+//     }
+//     res.json(group.messages);
+//   } catch (error) {
+//     console.error("Error fetching group messages:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
 router.post("/uploadPost", isLoggedIn, async function (req, res, next) {
   const user = await userModel.findOne({ username: req.session.passport.user });
   const postData = await PostModel.create({
@@ -482,6 +524,7 @@ router.get("/userprofile/:id", isLoggedIn, async function (req, res) {
     chats,
   });
 });
+
 
 router.post("/saveEntries", isLoggedIn, async function (req, res) {
   try {
@@ -707,6 +750,12 @@ router.post("/register", async function (req, res) {
   const { fullname, email, username, password } = req.body;
 
   try {
+    // Check if the username contains spaces
+    if (/\s/.test(username)) {
+      return res
+        .status(400)
+        .json({ message: "Username should not contain spaces" });
+    }
     let user = await userModel.findOne({ email });
     if (user) {
       return res.status(400).json({ message: "User already exists" });
@@ -747,38 +796,47 @@ router.post(
   async (req, res) => {
     const { sender_id, receiver_id, message } = req.body;
     const file = req.file;
+    const sender = await userModel.findById(sender_id);
+    if (sender.friends.indexOf(receiver_id) !== -1) {
+      try {
+        let newChat = {
+          senderId: sender_id,
+          receiverId: receiver_id,
+        };
 
-    if (!sender_id || !receiver_id) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Sender or receiver ID missing" });
-    }
+        if (message) {
+          newChat.message = message;
+        }
 
-    try {
-      let newChat = {
-        senderId: sender_id,
-        receiverId: receiver_id,
-      };
+        if (file) {
+          newChat.file = file.filename;
+        }
 
-      if (message) {
-        newChat.message = message;
+        const chatMessage = new messageModel(newChat);
+        await chatMessage.save();
+
+        res.status(200).json({ success: true, data: chatMessage });
+      } catch (error) {
+        console.error("Error:", error);
+        res.status(500).json({ success: false, message: "Server error" });
       }
-
-      if (file) {
-        newChat.file = file.filename;
-      }
-
-      const chatMessage = new messageModel(newChat);
-      await chatMessage.save();
-
-      res.status(200).json({ success: true, data: chatMessage });
-    } catch (error) {
-      console.error("Error:", error);
-      res.status(500).json({ success: false, message: "Server error" });
+    } else {
+      res
+        .status(403)
+        .json({ success: false, message: "You can only message your friends" });
     }
   }
 );
-
+router.delete("/deleteMessage/:id", async (req, res) => {
+  try {
+    const messageId = req.params.id;
+    await messageModel.findByIdAndDelete(messageId);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting message:", error);
+    res.json({ success: false, message: "Failed to delete message" });
+  }
+});
 router.post("/edit", async function (req, res, next) {
   try {
     // Retrieve the logged-in user's information
@@ -850,8 +908,10 @@ router.get("/logout", function (req, res) {
     res.redirect("/login");
   });
 });
+
 function isLoggedIn(req, res, next) {
   if (req.isAuthenticated()) return next();
   res.redirect("/login");
 }
+
 module.exports = router;

@@ -31,33 +31,32 @@
     </header>
     <main>
         <section class="profile-details">
-            <div class="user-info">
-                <a href="/images/uploads/<%=user.profileImage%>">
-                    <img src="/images/uploads/<%=user.profileImage%>" alt="">
-                </a>
-                <div class="details">
-                    <h2>
-                        <%=user.fullname%>
-                    </h2>
-                    <p>
-                        <%=user.major%>
-                    </p>
-                    <p>
-                        <%=user.university%>
-                    </p>
-                    <p>
-                        Interests: <%=user.interests%>
-                    </p>
-                    <!-- Add more user details here -->
-                </div>
-                <% if(user.is_online===1){ %>
-                    <span style="margin-left: 75%;margin-bottom: 80px;color: green;" class="online_status"
-                        id="<%=user._id%>-status">online</span>
-                    <% } else { %>
-                        <span style="margin-left: 75%;margin-bottom: 80px;color: red;" class="offline_status"
-                            id="<%=user._id%>-status">offline</span>
-                        <% } %>
-            </div>
+            <% if(user.is_online===1){ %>
+                <span class="online_status" id="<%=user._id%>-status">online</span>
+                <% } else { %>
+                    <span class="offline_status" id="<%=user._id%>-status">offline</span>
+                    <% } %>
+                        <div class="user-info">
+                            <a href="/images/uploads/<%=user.profileImage%>">
+                                <img src="/images/uploads/<%=user.profileImage%>" alt="">
+                            </a>
+                            <div class="details">
+                                <h2>
+                                    <%=user.fullname%>
+                                </h2>
+                                <p>
+                                    <%=user.major%>
+                                </p>
+                                <p>
+                                    <%=user.university%>
+                                </p>
+                                <p>
+                                    Interests: <%=user.interests%>
+                                </p>
+                                <!-- Add more user details here -->
+                            </div>
+
+                        </div>
         </section>
         <div class="outer">
             <div class="timeline">
@@ -144,20 +143,28 @@
 
                     <% if (chat.senderId.toString()===currentUser._id.toString()) { %>
 
-                        <div class="current-user-chat" data-id="<%= chat._id %>">
+                        <div class="chat-bubble current-user-chat" data-id="<%= chat._id %>">
                             <p>
                                 <%= chat.message %>
+                                    <i class="threeDot fa-solid fa-ellipsis-vertical"></i>
                             </p>
                             <a href="/images/uploads/<%= chat.file %>" download>
                                 <%= chat.file %>
                             </a>
+                            <span class="timestamp">
+                                <%= chat.formattedCreatedAt %>
+                            </span>
+                            <div class="message-options">
+                                <button onclick="removeMessage('<%= chat._id %>')">Remove message</button>
+                            </div>
                         </div>
                         <% } else { %>
-                            <div class="distance-user-chat">
+                            <div class="chat-bubble distance-user-chat" data-id="<%= chat._id %>">
                                 <p>
                                     <%= chat.message %>
+
                                 </p>
-                                <a href="/uploads/<%= chat.file %>" download>
+                                <a href="/images/uploads/<%= chat.file %>" download>
                                     <%= chat.file %>
                                 </a>
                             </div>
@@ -174,99 +181,29 @@
     <footer>
     </footer>
     <script>
+
+
         var sender_id = '<%=currentUser._id%>';
-        var receiver_id = '<%=user._id%>';
 
         var socket = io('/user-namespace', {
             auth: {
                 token: '<%=currentUser._id%>'
             }
         });
-
         // Update online users
         socket.on('getOnlineUser', function (data) {
-            var onlineUsers = document.getElementById('<%=user._id%>-status');
+            var onlineUsers = document.getElementById(data.user_id + '-status');
             onlineUsers.innerHTML = 'online';
+           
         });
 
         socket.on('getofflineUser', function (data) {
-            var offlineUsers = document.getElementById('<%=user._id%>-status');
+            var offlineUsers = document.getElementById(data.user_id + '-status');
             offlineUsers.innerHTML = 'offline';
+
         });
 
-        function scrollToBottom() {
-            var chatContainer = document.getElementById("message-box");
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
 
-        function submitMessage(event) {
-            event.preventDefault();
-
-            var messageInput = document.getElementById("message-input");
-            var message = messageInput.value;
-            var fileInput = document.getElementById("file-input");
-            var formData = new FormData();
-            formData.append('sender_id', sender_id);
-            formData.append('receiver_id', receiver_id);
-
-            if (messageInput.value) {
-                formData.append('message', messageInput.value);
-
-            }
-
-            if (fileInput.files.length > 0) {
-                formData.append('file', fileInput.files[0]);
-                console.log(fileInput);
-            }
-
-            fetch('/uploadChatFile', {
-                method: 'post',
-                body: formData
-            })
-                .then((response) => response.json())
-                .then((response) => {
-                    if (response.success) {
-                        messageInput.value = '';
-                        fileInput.value = '';
-                        var chatContainer = document.getElementById("message-box");
-                        var newMessage = document.createElement("div");
-                        newMessage.className = "current-user-chat";
-                        newMessage.setAttribute("data-id", response.data._id);
-                        newMessage.innerHTML = `<p>${response.data.message}</p>`;
-
-                        if (response.data.file) {
-                            newMessage.innerHTML = `<a href="/images/uploads/${response.data.file}" download>${response.data.file}</a>`;
-                        }
-
-                        chatContainer.appendChild(newMessage);
-                        scrollToBottom();
-                        socket.emit('newChat', { message: response.data.message, sender_id: sender_id, receiver_id: receiver_id, file: response.data.file });
-                    } else {
-                        console.error('Server responded with an error:', response.message);
-                    }
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                });
-        }
-
-        socket.on('loadNewChat', function (data) {
-            if (sender_id == data.receiver_id && receiver_id == data.sender_id) {
-
-                var chatContainer = document.getElementById("message-box");
-                var newMessage = document.createElement("div");
-                newMessage.className = "distance-user-chat";
-                newMessage.setAttribute("data-id", data._id);
-                let chat = data.message;
-                document.getElementById("message-box").append(chat);
-                if (data.file) {
-                    newMessage.innerHTML = `<a href="/images/uploads/${data.file}" download>${data.file}</a>`;
-                }
-                chatContainer.appendChild(newMessage);
-                scrollToBottom();
-            }
-        });
-        window.onload = scrollToBottom;
 
     </script>
 

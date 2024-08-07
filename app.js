@@ -1,11 +1,13 @@
 var createError = require("http-errors");
 var express = require("express");
 var path = require("path");
+const bodyParser = require("body-parser");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 const expressSession = require("express-session");
 const flash = require("connect-flash");
 const userModel = require("./routes/users");
+var checkFriendship = require("./routes/index");
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
 const passport = require("passport");
@@ -16,7 +18,11 @@ const { Server } = require("socket.io");
 const { connection } = require("mongoose");
 const io = new Server(server);
 
-// view engine setup
+app.use(logger("dev"));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, "public")));
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
@@ -36,16 +42,11 @@ passport.use(userModel.createStrategy());
 passport.serializeUser(usersRouter.serializeUser());
 passport.deserializeUser(usersRouter.deserializeUser());
 
-app.use(logger("dev"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public")));
-
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
+app.use("/uploadChatFile", checkFriendship);
 
-// Socket.io setup
+// // Socket.io setup
 
 var usp = io.of("/user-namespace");
 usp.on("connection", async function (socket) {
@@ -70,6 +71,18 @@ usp.on("connection", async function (socket) {
   //chatting implementation
   socket.on("newChat", function (data) {
     socket.broadcast.emit("loadNewChat", data);
+  });
+  // Handle message deletion broadcasting
+  socket.on("messageDeleted", function (data) {
+    socket.broadcast.emit("loadMessageDeleted", data);
+  });
+  // Handle new message event
+  socket.on("newMessage", function (message) {
+    io.of("/user-namespace")
+      .to(message.groupId)
+      .emit("messageReceived", message);
+    // console.log("message:",message);
+    socket.broadcast.emit('messageReceived',message);
   });
 });
 

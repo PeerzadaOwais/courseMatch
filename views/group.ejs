@@ -6,8 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Group Members</title>
     <link rel="stylesheet" href="/stylesheets/group.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.js"
+        integrity="sha512-VJ6+sp2E5rFQk05caiXXzQd1wBABpjEj1r5kMiLmGAAgwPItw1YpqsCCBtq8Yr1x6C49/mTpRdXtq8O2RcZhlQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 
 <body>
@@ -20,16 +23,7 @@
                 <li><a href="/about">About</a></li>
                 <li><a href="/contact">ContactUs</a></li>
                 <li><a href="/profile">Profile</a></li>
-                <!-- <li class="dropdown">
-                        <button style="font-size: 16px; margin-top: -30px; margin-left: -5px;"
-                            class="dropbtn"><strong>Profile</strong></button>
-                        <div class="dropdown-content">
-                            <a href="#">Settings</a>
-                            <a href="#" onclick="CreateGroup()">Create Group</a>
-                            <a href="/groupchat">Groups</a>
-                            <a href="#">Logout</a>
-                        </div>
-                </li> -->
+
 
             </ul>
         </nav>
@@ -38,11 +32,11 @@
     <main>
         <div id="message-container">
             <div>
-                
+
                 <section id="group-members">
-                    <h2 >Group Members</h2>
+                    <h2>Group Members</h2>
                     <div id="members-list">
-                        
+
                         <!-- Members will be dynamically populated here -->
                     </div>
                 </section>
@@ -52,21 +46,45 @@
             <div>
                 <section id="messages">
                     <h2>Group Chat</h2>
-                    <div id="chat-messages">
-                        <!-- Chat messages will go here -->
+                    <div id="message-box">
+
+
+
+
+                        <!-- <div class="chat-bubble current-user-chat">
+                            <p>
+                                hi
+                                <i class="threeDot fa-solid fa-ellipsis-vertical"></i>
+                            </p>
+
+
+                            <div class="message-options">
+                                        <button >Remove message</button>
+                                    </div>
+                        </div> -->
+                        <!-- <div class="chat-bubble distance-user-chat">
+                            <p>
+                                hi
+                            </p>
+                          
+                        </div> -->
+
                     </div>
                 </section>
                 <div style="position: absolute; width: 70%;">
-                    <form id="message-form">
+
+                    <form>
                         <input type="text" id="message-input" placeholder="Type your message...">
+                        <!-- <input type="file" id="file-input"> -->
+
                         <i id="upload-icon" class="fa-solid fa-paperclip"></i>
-                        <button type="submit">Send</button>
+                        <button style="background-color: red; z-index: 2; position: absolute;"
+                            type="submit">Send</button>
                     </form>
                     <form id="upload-form" hidden action="" enctype="multipart/form-data">
-                        <input type="file" id="file-input">
-
+                        <input type="file" id="file-input" name="file">
                     </form>
-                    <!-- <button id="upload-button">Upload</button> -->
+                    <span id="file-name" style="margin-left: 10px;"></span>
                     <ul id="file-list">
                 </div>
             </div>
@@ -75,11 +93,13 @@
                 <hr>
                 <%user.groups.forEach(function(group){%>
                     <ul>
-                        <li class="group-item" data-group-id="<%= group._id %>" data-group-name="<%= group.name %>" data-group-description="<%=group.description%>">
-                           <a href="/images/uploads/<%=group.picture%>"><img src="/images/uploads/<%=group.picture%>" alt=""></a> 
+                        <li class="group-item" data-group-id="<%= group._id %>" data-group-name="<%= group.name %>"
+                            data-group-description="<%=group.description%>">
+                            <a href="/images/uploads/<%=group.picture%>"><img src="/images/uploads/<%=group.picture%>"
+                                    alt=""></a>
                             <span>
-                                
-                                    <%=group.name%>
+
+                                <%=group.name%>
                             </span>
                             <i class="threeDot fa-solid fa-ellipsis-vertical"></i>
                             <% if (group.creator._id.toString()===loggedInUser._id.toString()) { %>
@@ -109,6 +129,17 @@
     <footer>
         <p>&copy; 2024 Course Match</p>
     </footer>
+    <script>
+        var sender_id = '<%=loggedInUser._id%>';
+        // console.log(sender_id);
+        var socket = io('/user-namespace', {
+            auth: {
+                token: '<%=loggedInUser._id%>'
+            }});
+
+
+
+    </script>
     <script src="/javascripts/group.js"></script>
 
 </body>

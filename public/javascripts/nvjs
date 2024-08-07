@@ -1,0 +1,186 @@
+
+        // document.addEventListener("DOMContentLoaded", () => {
+        //     document.querySelector("#upload-icon").addEventListener("click", function() {
+        //         document.querySelector("#file-input").click();
+        //     });
+
+        //     document.querySelector("#file-input").addEventListener("change", function() {
+        //         const fileName = this.files[0] ? this.files[0].name : "";
+        //         document.querySelector("#file-name").textContent = fileName;
+        //     });
+
+        //     document.querySelectorAll(".threeDot").forEach((threeDotIcon) => {
+        //         threeDotIcon.addEventListener("click", function() {
+        //             const parentElement = threeDotIcon.closest(".group-item");
+        //             const removeDiv = parentElement.querySelector(".removeDiv");
+
+        //             document.querySelectorAll(".removeDiv").forEach((div) => {
+        //                 if (div !== removeDiv) {
+        //                     div.style.display = "none";
+        //                 }
+        //             });
+
+        //             removeDiv.style.display = removeDiv.style.display === "block" ? "none" : "block";
+        //         });
+        //     });
+
+        //     document.querySelectorAll(".group-item").forEach((groupItem) => {
+        //         groupItem.addEventListener("click", async () => {
+        //             const groupId = groupItem.getAttribute("data-group-id");
+        //             const groupName = groupItem.getAttribute("data-group-name");
+        //             const description = groupItem.getAttribute("data-group-description");
+        //             const membersListDiv = document.getElementById("members-list");
+        //             const chatMessagesDiv = document.getElementById("chat-messages");
+
+        //             var groupname = document.querySelector(".groupName");
+        //             groupname.innerHTML = groupName;
+        //             groupname.setAttribute("data-group-id", groupId);
+        //             document.querySelector(".description").innerHTML = description;
+
+        //             const loggedInUserRespon = await fetch("/user");
+        //             const loggedInUser = await loggedInUserRespon.json();
+
+        //             function submitMessage(event) {
+        //                 event.preventDefault();
+
+        //                 const messageInput = document.getElementById("message-input");
+        //                 const message = messageInput.value;
+        //                 const fileInput = document.getElementById("file-input");
+        //                 const formData = new FormData();
+        //                 formData.append("message", message);
+        //                 formData.append("senderId", loggedInUser);
+        //                 formData.append("groupId", groupId);
+        //                 if (fileInput.files.length > 0) {
+        //                     formData.append("file", fileInput.files[0]);
+        //                 }
+
+        //                 fetch("/uploadGroupMessage", {
+        //                     method: "POST",
+        //                     body: formData,
+        //                 })
+        //                 .then((response) => response.json())
+        //                 .then((data) => {
+        //                     if (data.success) {
+        //                         messageInput.value = "";
+        //                         fileInput.value = "";
+        //                         document.querySelector("#file-name").textContent = "";
+        //                         console.log(data);
+        //                     } else {
+        //                         console.error("Error uploading message:", data.message);
+        //                     }
+        //                 })
+        //                 .catch((error) => console.error("Error:", error));
+        //             }
+
+        //             document.getElementById("message-input").parentElement.onsubmit = submitMessage;
+
+        //             try {
+        //                 const membersResponse = await fetch(`/groups/${groupId}/members`);
+        //                 const group = await membersResponse.json();
+        //                 const { members, creator } = group;
+
+        //                 membersListDiv.innerHTML = "";
+
+        //                 members.forEach((member) => {
+        //                     const memberElement = document.createElement("div");
+        //                     const isAdmin = member._id === creator._id;
+        //                     memberElement.classList.add("group-item");
+        //                     memberElement.innerHTML = `
+        //                         <ul>
+        //                             <li class="group-item" data-group-id="${groupId}" data-member-id="${member._id}">
+        //                                 <img src="/images/uploads/${member.profileImage}" alt="">
+        //                                 <span>${member.username} ${isAdmin ? "(admin)" : ""}</span>
+        //                                 ${isAdmin ? (creator._id === loggedInUser._id ? 
+        //                                 '<button class="addMemberBtn">Add Members</button><br><div class="addMemberDiv">' +
+        //                                 '<label for="members">Add Members:</label>' +
+        //                                 '<div id="selected-members" class="selected-members"></div>' +
+        //                                 '<input type="text" id="members-input" name="members-input" oninput="searchMembers()" autocomplete="off">' +
+        //                                 '<div id="suggestions" class="suggestions"></div>' +
+        //                                 '<input type="hidden" id="members" name="members">' +
+        //                                 '</div>' : '') : '<i class="threeDot fa-solid fa-ellipsis-vertical"></i>'}
+        //                                 <div style="display:none;" class="removeMemberDiv removeDiv">
+        //                                     <a href="#" class="remove-member" data-member-id="${member._id}">Remove</a>
+        //                                 </div>
+        //                             </li>
+        //                         </ul>
+        //                     `;
+        //                     membersListDiv.appendChild(memberElement);
+        //                 });
+
+        //                 document.querySelectorAll(".addMemberBtn").forEach((addMemberBtn) => {
+        //                     addMemberBtn.addEventListener("click", function() {
+        //                         const addMemberDiv = this.nextElementSibling;
+        //                         addMemberDiv.style.display = "block";
+        //                     });
+        //                 });
+
+        //                 document.querySelectorAll(".threeDot").forEach((threeDotIcon) => {
+        //                     threeDotIcon.addEventListener("click", function() {
+        //                         const parentElement = threeDotIcon.closest(".group-item");
+        //                         const removeDiv = parentElement.querySelector(".removeDiv");
+
+        //                         document.querySelectorAll(".removeDiv").forEach((div) => {
+        //                             if (div !== removeDiv) {
+        //                                 div.style.display = "none";
+        //                             }
+        //                         });
+
+        //                         removeDiv.style.display = removeDiv.style.display === "block" ? "none" : "block";
+        //                     });
+        //                 });
+
+        //                 document.querySelectorAll(".remove-member").forEach((removeMemberLink) => {
+        //                     removeMemberLink.addEventListener("click", async (event) => {
+        //                         event.preventDefault();
+        //                         const memberId = removeMemberLink.dataset.memberId;
+        //                         try {
+        //                             const response = await fetch(`/groups/${groupId}/remove-member/${memberId}`, {
+        //                                 method: "DELETE",
+        //                             });
+        //                             if (response.ok) {
+        //                                 removeMemberLink.closest(".group-item").remove();
+        //                             } else {
+        //                                 console.error("Error removing member");
+        //                             }
+        //                         } catch (error) {
+        //                             console.error("Error:", error);
+        //                         }
+        //                     });
+        //                 });
+
+        //                 const messagesResponse = await fetch(`/groups/${groupId}/messages`);
+        //                 const messages = await messagesResponse.json();
+
+        //                 chatMessagesDiv.innerHTML = "";
+
+        //                 messages.forEach((message) => {
+        //                     const messageElement = document.createElement("div");
+        //                     messageElement.innerHTML = `
+        //                         <div class="message">
+        //                             <strong>${message.sender.username}:</strong> ${message.text}
+        //                             ${message.file ? `<br><a href="${message.file}">Download file</a>` : ""}
+        //                         </div>
+        //                     `;
+        //                     chatMessagesDiv.appendChild(messageElement);
+        //                 });
+
+        //                 const eventSource = new EventSource(`/groups/${groupId}/messages-stream`);
+
+        //                 eventSource.onmessage = (event) => {
+        //                     const newMessage = JSON.parse(event.data);
+        //                     const messageElement = document.createElement("div");
+        //                     messageElement.innerHTML = `
+        //                         <div class="message">
+        //                             <strong>${newMessage.sender.username}:</strong> ${newMessage.text}
+        //                             ${newMessage.file ? `<br><a href="${newMessage.file}">Download file</a>` : ""}
+        //                         </div>
+        //                     `;
+        //                     chatMessagesDiv.appendChild(messageElement);
+        //                 };
+
+        //             } catch (error) {
+        //                 console.error("Error fetching group data:", error);
+        //             }
+        //         });
+        //     });
+        // });
