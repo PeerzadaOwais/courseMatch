@@ -1,40 +1,101 @@
+var socket = io("/user-namespace", {
+  auth: {
+    token: sender_id,
+  },
+});
 document.addEventListener("DOMContentLoaded", () => {
-  var socket = io("/user-namespace", {
-    auth: {
-      token: sender_id,
-    },
-  });
   function scrollToBottom() {
     var chatContainer = document.getElementById("message-box");
     chatContainer.scrollTop = chatContainer.scrollHeight;
   }
+  const messageBox = document.getElementById("message-box");
+
+  // Event delegation for the three-dot icon
+  messageBox.addEventListener("click", function(event) {
+    if (event.target.classList.contains("msgthreedot")) {
+      const threeDotIcon = event.target;
+      const parentElement = threeDotIcon.closest(".current-user-chat");
+      const removeDiv = parentElement.querySelector(".message-options");
+
+      // Hide other message-options
+      document.querySelectorAll(".message-options").forEach((div) => {
+        if (div !== removeDiv) {
+          div.style.display = "none";
+        }
+      });
+
+      // Toggle the current message-options
+      removeDiv.style.display =
+        removeDiv.style.display === "block" ? "none" : "block";
+    }
+  });
+
+ 
+
   // Handle receiving new messages
   let lastSenderId = null;
+
   socket.on("messageReceived", function (message) {
-    console.log(message);
+    console.log("client side:",message);
     const groupId = document
       .querySelector(".groupName")
       .getAttribute("data-group-id");
+
     if (message.groupId === groupId) {
       const messageElement = document.createElement("div");
       messageElement.classList.add("chat-bubble", "distance-user-chat");
-      // console.log(message.senderId.username);
-      if (message.senderId !== lastSenderId) {
-        messageElement.innerHTML = `<div class="message-body"><p class="sender-name">${message.senderUsername}</p> <p>${message.message}</p></div>`;
-      } else {
-        messageElement.innerHTML = `<p>${message.message}</p>`;
-      }
+      messageElement.setAttribute("data-id",message.message_id); 
+
+      // Determine if sender's name should be displayed
+      const showSenderName = message.senderId !== lastSenderId;
+      const senderNameHtml = showSenderName
+        ? `<p class="sender-name">${message.senderUsername}</p>`
+        : "";
+
+      // Construct message content
+      const messageHtml = message.message ? `<p>${message.message}</p>` : "";
+      const fileHtml = message.file ? `<a href="/uploads/chat/${message.file}" download>${message.file}</a>` : "";
+
+      // Set inner HTML with conditional sender name
+      messageElement.innerHTML = `
+        <div class="message-body">
+          ${senderNameHtml}
+          ${messageHtml}
+          ${fileHtml}
+        </div>`;
+
+
+    
+
+
+      // Append the message element to the message box
       document.getElementById("message-box").appendChild(messageElement);
+
+      // Update the last sender ID to the current one
       lastSenderId = message.senderId;
     }
+
+    // Ensure the chat scrolls to the bottom after a new message is added
     scrollToBottom();
   });
-
+  socket.on("loadGroupMessageDeleted", function (data) {
+    console.log("client side:", data.messageId);
+    // if(message._id===data.messageId){
+    var messageElement = document.querySelector(
+      `.chat-bubble[data-id='${data.messageId}']`
+    );
+    if (messageElement) {
+      messageElement.remove();
+      // }
+    }
+  });
   document.querySelector("#upload-icon").addEventListener("click", function () {
     document.querySelector("#upload-form input").click();
   });
 
-  document.querySelector("#upload-form input").addEventListener("change", function () {
+  document
+    .querySelector("#upload-form input")
+    .addEventListener("change", function () {
       const fileName = this.files[0] ? this.files[0].name : "";
       document.querySelector("#file-name").textContent = fileName;
       document.querySelector("#upload-form").onsubmit = submitMessage;
@@ -44,34 +105,66 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const response = await fetch(`/groups/${groupId}/messages`);
       const messages = await response.json();
+      // console.log(messages);
       const messageBox = document.getElementById("message-box");
-      
+
       // Clear previous messages
       messageBox.innerHTML = "";
       let lastSenderId = null;
 
       // Append new messages
       messages.forEach((message) => {
+        //  console.log(message.file);
+        //  console.log(message.message);
         const messageElement = document.createElement("div");
+        messageElement.setAttribute("data-id", message._id); // Set data-id attribute here
         const isCurrentUser = message.senderId._id === loggedInUser;
-
         messageElement.classList.add(
           "chat-bubble",
           isCurrentUser ? "current-user-chat" : "distance-user-chat"
         );
         if (!isCurrentUser && message.senderId._id !== lastSenderId) {
-          messageElement.innerHTML = `<div class="message-body"><p class="sender-name">${message.senderId.username}</p> <p>${message.message}</p></div>`;
+          if (message.message && message.file) {
+            messageElement.innerHTML = `<div class="message-body"><p class="sender-name">${message.senderId.username}</p> <p>${message.message}</p>      <a href="/uploads/chat/${message.file}" download>${message.file}</a></div>`;
+          } else if (message.message) {
+            messageElement.innerHTML = `<div class="message-body"><p class="sender-name">${message.senderId.username}</p> <p>${message.message}</p>     </div>`;
+          } else if (message.file) {
+            messageElement.innerHTML = `<div class="message-body"><p class="sender-name">${message.senderId.username}</p>  <a href="/uploads/chat/${message.file}"download>${message.file}</a></div>`;
+          }
+        } else if (isCurrentUser) {
+          // Current user's message with three-dot icon
+          if (message.message && message.file) {
+            messageElement.innerHTML = `<p>${message.message}</p><a href="/uploads/chat/${message.file}"download>${message.file}</a>&nbsp     <i class=" msgthreedot fa-solid fa-ellipsis-vertical"></i><div class="message-options"style="display:none;" >
+          <button onclick="removeMessage('${message._id}')">Remove message</button>
+      </div>`;
+          } else if (message.message) {
+            messageElement.innerHTML = `<p>${message.message}</p>&nbsp     <i class=" msgthreedot fa-solid fa-ellipsis-vertical"></i><div class="message-options"style="display:none;" >
+          <button onclick="removeMessage('${message._id}')">Remove message</button>
+      </div>`;
+          } else if (message.file) {
+            messageElement.innerHTML = `<a href="/uploads/chat/${message.file}"download>${message.file}</a>&nbsp     <i class=" msgthreedot fa-solid fa-ellipsis-vertical"></i><div class="message-options"style="display:none;" >
+          <button onclick="removeMessage('${message._id}')">Remove message</button>
+      </div>`;
+          }
         } else {
-          messageElement.innerHTML = `<p>${message.message}</p>`;
+          if (message.message && message.file) {
+            messageElement.innerHTML = `<p>${message.message}</p>  <a href="/uploads/chat/${message.file}"download>${message.file}</a>`;
+          } else if (message.message) {
+            messageElement.innerHTML = `<p>${message.message}</p> `;
+          } else if (message.file) {
+            messageElement.innerHTML = ` <a href="/uploads/chat/${message.file}"download>${message.file}</a> `;
+          }
         }
         messageBox.appendChild(messageElement);
         lastSenderId = message.senderId._id;
       });
+
       scrollToBottom();
     } catch (error) {
       console.error("Error fetching messages:", error);
     }
   }
+
   document.querySelectorAll(".group-item").forEach((groupItem) => {
     groupItem.addEventListener("click", async () => {
       const groupId = groupItem.getAttribute("data-group-id");
@@ -113,30 +206,83 @@ document.addEventListener("DOMContentLoaded", () => {
           .then((response) => response.json())
           .then((data) => {
             if (data.success) {
-              
-              const senderUsername =data.data.populatedMessage.senderId.username;
-              senderId = data.data.senderId;
-              // Append the new message to the chat box
-              const messageElement = document.createElement("div");
-              messageElement.classList.add("chat-bubble", "current-user-chat");
-              messageElement.innerHTML = `<p>${message}</p>`;
-              document
-                .getElementById("message-box")
-                .appendChild(messageElement);
+              const message_id = data.data.populatedMessage._id;
+              const file = data.data.populatedMessage.file;
+              const senderUsername =
+                data.data.populatedMessage.senderId.username;
+              const senderId = data.data.senderId;
+
+              if (message && file) {
+                // Append the new message to the chat box
+                const messageElement = document.createElement("div");
+                messageElement.classList.add(
+                  "chat-bubble",
+                  "current-user-chat"
+                );
+                messageElement.setAttribute("data-id", message_id);
+
+                messageElement.innerHTML = `<p>${message}</p> <a href="/uploads/chat/${file}"download>${file}</a>  &nbsp     <i class=" msgthreedot fa-solid fa-ellipsis-vertical"></i><div class="message-options"style="display:none;" >
+          <button onclick="removeMessage('${message_id}')">Remove message</button>
+      </div>
+`;
+                document
+                  .getElementById("message-box")
+                  .appendChild(messageElement);
+              } else if (file) {
+                // Append the new message to the chat box
+                const messageElement = document.createElement("div");
+                messageElement.classList.add(
+                  "chat-bubble",
+                  "current-user-chat"
+                );
+                messageElement.setAttribute("data-id", message_id);
+
+                messageElement.innerHTML = `<a href="/uploads/chat/${file}"download>${file}</a>  &nbsp   <i class=" msgthreedot fa-solid fa-ellipsis-vertical"></i><div class="message-options"style="display:none;" >
+          <button onclick="removeMessage('${message_id}')">Remove message</button>
+      </div>
+`;
+                document
+                  .getElementById("message-box")
+                  .appendChild(messageElement);
+              } else if (message) {
+                // Append the new message to the chat box
+                const messageElement = document.createElement("div");
+                messageElement.classList.add(
+                  "chat-bubble",
+                  "current-user-chat"
+                );
+                messageElement.setAttribute("data-id", message_id);
+
+                messageElement.innerHTML = `<p>${message}</p>    &nbsp   <i class=" msgthreedot fa-solid fa-ellipsis-vertical"></i><div class="message-options" style="display:none;" >
+          <button onclick="removeMessage('${message_id}')">Remove message</button>
+      </div>
+`;
+
+                document
+                  .getElementById("message-box")
+                  .appendChild(messageElement);
+                  
+              }              
+
+
 
               // Clear the input field
               messageInput.value = "";
-              messageInput.value = "";
               fileInput.value = "";
               document.querySelector("#file-name").textContent = "";
+              
               scrollToBottom();
               // Emit the new message event to the server
+              // console.log(message);
               socket.emit("newMessage", {
+                message_id,
                 senderUsername,
                 groupId,
                 senderId,
                 message,
+                file,
               });
+
             } else {
               console.error("Error uploading message:", data.message);
             }
@@ -165,32 +311,32 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  document.querySelectorAll(".remove-member").forEach((removeLink) => {
-    removeLink.addEventListener("click", async function (e) {
-      e.preventDefault();
-      const groupId = removeLink
-        .closest(".group-item")
-        .getAttribute("data-group-id");
-      const memberId = removeLink.getAttribute("data-member-id");
-      try {
-        const response = await fetch("/group/remove-member", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ groupId, memberId }),
-        });
-        if (response.ok) {
-          removeLink.closest("li").remove(); // Update UI to reflect member removal
-        } else {
-          alert("Only admin can remove members");
-          console.error("Failed to remove member:", response.statusText);
-        }
-      } catch (err) {
-        console.error("Error removing member:", err);
-      }
-    });
-  });
+  // document.querySelectorAll(".remove-member").forEach((removeLink) => {
+  //   removeLink.addEventListener("click", async function (e) {
+  //     e.preventDefault();
+  //     const groupId = removeLink
+  //       .closest(".group-item")
+  //       .getAttribute("data-group-id");
+  //     const memberId = removeLink.getAttribute("data-member-id");
+  //     try {
+  //       const response = await fetch("/group/remove-member", {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify({ groupId, memberId }),
+  //       });
+  //       if (response.ok) {
+  //         removeLink.closest("li").remove(); // Update UI to reflect member removal
+  //       } else {
+  //         alert("Only admin can remove members");
+  //         console.error("Failed to remove member:", response.statusText);
+  //       }
+  //     } catch (err) {
+  //       console.error("Error removing member:", err);
+  //     }
+  //   });
+  // });
 
   document.querySelectorAll(".leave-group").forEach((leaveLink) => {
     leaveLink.addEventListener("click", async function (e) {
@@ -336,10 +482,33 @@ async function fetchMembers(groupId, loggedInUser) {
       });
     });
     window.onload = scrollToBottom;
-    
   } catch (error) {
     console.error("Error fetching group members:", error);
   }
+}
+function removeMessage(messageId) {
+  fetch(`/deleteMessage/${messageId}`, {
+    method: "DELETE",
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        // Remove the message from the DOM
+        var messageElement = document.querySelector(
+          `.chat-bubble[data-id='${messageId}']`
+        );
+        if (messageElement) {
+          messageElement.remove();
+          // Emit socket event for real-time deletion
+          socket.emit("groupMessageDeleted", { messageId });
+        }
+      } else {
+        console.error("Failed to delete message:", data.message);
+      }
+    })
+    .catch((error) => {
+      console.error("Error deleting message:", error);
+    });
 }
 
 async function searchMembers() {

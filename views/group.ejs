@@ -49,26 +49,6 @@
                     <div id="message-box">
 
 
-
-
-                        <!-- <div class="chat-bubble current-user-chat">
-                            <p>
-                                hi
-                                <i class="threeDot fa-solid fa-ellipsis-vertical"></i>
-                            </p>
-
-
-                            <div class="message-options">
-                                        <button >Remove message</button>
-                                    </div>
-                        </div> -->
-                        <!-- <div class="chat-bubble distance-user-chat">
-                            <p>
-                                hi
-                            </p>
-                          
-                        </div> -->
-
                     </div>
                 </section>
                 <div style="position: absolute; width: 70%;">
@@ -135,9 +115,10 @@
         var socket = io('/user-namespace', {
             auth: {
                 token: '<%=loggedInUser._id%>'
-            }});
+            }
+        });
 
-
+      
 
     </script>
     <script src="/javascripts/group.js"></script>

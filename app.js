@@ -78,11 +78,16 @@ usp.on("connection", async function (socket) {
   });
   // Handle new message event
   socket.on("newMessage", function (message) {
+    console.log(message);
     io.of("/user-namespace")
       .to(message.groupId)
       .emit("messageReceived", message);
     // console.log("message:",message);
     socket.broadcast.emit('messageReceived',message);
+  });
+  socket.on("groupMessageDeleted",function(data){
+    console.log("server side",data);
+    socket.broadcast.emit('loadGroupMessageDeleted',data);
   });
 });
 

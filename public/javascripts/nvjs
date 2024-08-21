@@ -184,3 +184,40 @@
         //         });
         //     });
         // });
+
+
+
+
+
+
+
+
+
+
+
+        // document.querySelectorAll(".confirm-delete-group").forEach((btn) => {
+  //   btn.addEventListener("click", function () {
+  //     fetch(`/deleteGroup/${currentGroupId}`, {
+  //       method: "DELETE",
+  //     })
+  //       .then((response) => response.json())
+  //       .then((data) => {
+  //         if (data.message === "Group deleted successfully") {
+  //           currentGroupCard.remove();
+  //           alert("group deleted successfully!");
+  //         } else {
+  //           alert("Failed to remove group.");
+  //         }
+  //       })
+  //       .catch((error) => {
+  //         console.error("Error:", error);
+  //         alert("An error occurred.");
+  //       });
+  //   });
+  // });
+  // document.querySelectorAll(".cancel-delete-group").forEach((btn) => {
+  //   btn.addEventListener("click", function () {
+  //     const popup = this.closest(".group-confirmation-popup");
+  //     popup.classList.add("hidden");
+  //   });
+  // });

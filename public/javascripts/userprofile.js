@@ -1,4 +1,27 @@
 document.addEventListener("DOMContentLoaded", function () {
+  const closeBtn = document.querySelector(".close-btn");
+  // Close the modal when the 'x' button is clicked
+  closeBtn.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+
+  // Close the modal when clicking outside of the modal content
+  window.addEventListener("click", (event) => {
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+  });
+   // JavaScript to toggle the report form visibility
+   const reportButton = document.getElementById('reportButton');
+   const reportForm = document.getElementById('modal');
+
+   reportButton.addEventListener('click', function() {
+       if (reportForm.style.display === 'none' || reportForm.style.display === '') {
+           reportForm.style.display = 'block'; // Show the form
+       } else {
+           reportForm.style.display = 'none'; // Hide the form
+       }
+   });
   document.querySelectorAll(".threeDot").forEach((threeDotIcon) => {
     threeDotIcon.addEventListener("click", function () {
       const parentElement = threeDotIcon.closest(".current-user-chat");
@@ -95,6 +118,7 @@ function submitMessage(event) {
   })
     .then((response) => response.json())
     .then((response) => {
+      console.log(response.data);
       if (response.success) {
         messageInput.value = "";
         fileInput.value = "";

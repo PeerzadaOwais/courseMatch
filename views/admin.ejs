@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="/stylesheets/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+</head>
+
+<body>
+    <div class="sidebar">
+        <h2>Admin Dashboard</h2>
+        <ul>
+            <li><a href="#users">Manage Users</a></li>
+            <li><a href="#posts">Manage Posts</a></li>
+            <li><a href="#groups">Manage Groups</a></li>
+            <li><a href="#feedbacks">Manage Feedbacks</a></li>
+            <li><a href="#reports">Manage Reports</a></li>
+            <li><a href="#statistics">Site Statistics</a></li>
+        </ul>
+    </div>
+
+    <div class="content">
+        <h1>Welcome, Admin</h1>
+
+
+        <div class="card-column" id="users">
+            <input id="user-search" class="search-user" type="text" placeholder="search user here...">
+            <h2>Manage Users</h2>
+
+
+            <%users.forEach(function(user){%>
+
+                <div class="user-card">
+                    <img src="/images/uploads/<%=user.profileImage%>" alt="">
+                    <p class="user-name">
+                        <%=user.username%>
+                    </p>
+                    <p class="user-email">
+                        <%=user.email%>
+                    </p>
+                    <p class="user-university">
+                        <%=user.university%>
+                    </p>
+                    <button class="remove-btn" data-id="<%=user._id%>">remove</button>
+                    <div id="confirmation-popup" class="confirmation-popup hidden">
+                        <div class="popup-content">
+                            <p>Are you sure you want to delete this user?</p>
+                            <button id="confirm-delete">Yes, delete</button>
+                            <button id="cancel-delete">Cancel</button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <%});%>
+
+
+        </div>
+
+        <section id="posts" class="card-column">
+            <h2>Manage Posts</h2>
+            <%posts.forEach(function(post){%>
+                <div class="post-card">
+                    <div class="flex-content">
+                        <img src="/images/uploads/<%=post.profileImage%>" alt="">
+                        <p>
+                            <%=post.fullname%>
+                        </p>
+                        <p class="time">
+                            <%=post.formattedCreatedAt%>
+                        </p>
+                        <i class="threeDot fa-solid fa-ellipsis-vertical"></i>
+                        <button class="post-remove-btn hidden" data-id="<%=post._id%>">remove</button>
+                        <div class="post-confirmation-popup confirmation-popup hidden">
+                            <div class="popup-content">
+                                <p>Are you sure you want to delete this post?</p>
+                                <button class="confirm-delete-post">Yes, delete</button>
+                                <button class="cancel-delete-post">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="post-content">
+                        <%=post.content%>
+                    </p>
+                </div>
+                <%});%>
+
+
+
+
+        </section>
+
+        <!-- Group Management Section -->
+        <section id="groups" class="card-column">
+            <h2>Manage Groups</h2>
+            <div class="groups-card">
+                <%groups.forEach(function(group,index){%>
+                    <div class="inner-group-card">
+                        <i class="threeDot fa-solid fa-ellipsis-vertical"></i>
+                        <button class="group-remove-btn hidden" data-id="<%=group._id%>">remove</button>
+                        <div class="group-confirmation-popup confirmation-popup hidden">
+                            <div class="popup-content">
+                                <p>Are you sure you want to delete this post?</p>
+                                <button class="confirm-delete-group">Yes, delete</button>
+                                <button class="cancel-delete-group">Cancel</button>
+                            </div>
+                        </div>
+                        <img src="/images/uploads/<%=group.picture%>" alt="">
+                        <h3>
+                            <%=group.name%>
+                        </h3>
+                        <p>Admin:&nbsp;<strong>
+                                <%= group.creator && group.creator.fullname %>
+                        </p></strong>
+                        <p>total members: <%= group.members.length %>
+                        </p>
+                        <button class="details-btn" data-group-name="<%= group.name %>"
+                            data-group-admin="<%= group.creator && group.creator.fullname %>"
+                            data-group-members="<%= group.members.length %>"
+                            data-group-member="<%= JSON.stringify(group.members) %>" data-group-id="<%=group._id%>">
+                            Details
+                        </button>
+                    </div>
+                    <%});%>
+        </section>
+        <!-- Modal for Group Details -->
+        <div id="group-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn">&times;</span>
+                <h3 id="modal-group-name"></h3>
+                <p id="modal-group-admin"></p>
+                <p>Total Members: <span id="modal-group-members-count"></span></p>
+
+                <!-- List of group members -->
+                <ul id="modal-group-members">
+
+                </ul>
+                <ul id="modal-group-messages">
+
+                </ul>
+
+            </div>
+        </div>
+
+        <!-- Feedback Management Section -->
+        <section id="feedbacks" class="card-column">
+            <h2>Manage Feedbacks</h2>
+            <div class="outer-feedback-card">
+                <%feedbacks.forEach(function(feedback){%>
+                    <div class="feedback-card">
+                        <h3>
+                            <%=feedback.fullname%>
+                        </h3>
+                        <p>
+                            <%=feedback.email%>
+                        </p>
+                        <p>
+                            <%=feedback.message%>
+                        </p>
+                    </div>
+                    <%})%>
+            </div>
+        </section>
+
+        <!-- Reports Management Section -->
+        <section id="reports" class="section-column">
+            <h2>Manage Reports</h2>
+            <div class="card-column">
+                <div class="card-header">Reported by exampleUser4</div>
+                <div class="card-content">
+                    <p>Inappropriate post...</p>
+                    <p>Reason: Harassment</p>
+                </div>
+                <div class="card-actions">
+                    <button>Delete Post</button>
+                    <button>Warn User</button>
+                </div>
+            </div>
+            <!-- Repeat for more reports -->
+        </section>
+
+        <!-- Site Statistics Section -->
+        <section id="statistics" class="statistics-column">
+            <div class="stat-card">
+                <h3>Total Users</h3>
+                <p>500</p>
+            </div>
+            <div class="stat-card">
+                <h3>Total Posts</h3>
+                <p>1,200</p>
+            </div>
+            <div class="stat-card">
+                <h3>Total Groups</h3>
+                <p>100</p>
+            </div>
+            <div class="stat-card">
+                <h3>Total Feedbacks</h3>
+                <p>50</p>
+            </div>
+            <div class="stat-card">
+                <h3>Total Reports</h3>
+                <p>10</p>
+            </div>
+        </section>
+    </div>
+    <script src="/javascripts/admin.js"></script>
+</body>
+
+</html>

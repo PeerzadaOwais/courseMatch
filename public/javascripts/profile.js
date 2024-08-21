@@ -28,25 +28,7 @@ document.querySelector("#circle").addEventListener("click", function () {
       fetch(`/deleteEntry/${entryId}`, { method: "DELETE" });
     }
   });
-  // let currentIndex = 0;
-  // document.querySelector('.fa-xmark').addEventListener("click",function(){
-  //   var ddiv=document.querySelector('.circular-div');
-  //   ddiv.remove();
-  //   // Send a request to delete the entry from the database
-  //   const entryId = ddiv.dataset.entryId;
-  //   if (entryId){
-  //     fetch(`/deleteEntry/${entryId}`, { method: "DELETE" });
-  //   }
-  // });
-  //   if (currentIndex < newdiv.length) {
-  //     // Remove the current div from the DOM
-  //     newdiv[currentIndex].remove();
-  //     // Increment the index for the next div
-  //     currentIndex++;
-  //   }
-  // });
-
-  var studyInput = document.createElement("input");
+   var studyInput = document.createElement("input");
   studyInput.className = "studyinput";
   studyInput.type = "text";
   studyInput.placeholder = "add school/college";
@@ -123,20 +105,8 @@ commentBtn.forEach((commentBtn) => {
     commentSection.style.display =
       commentSection.style.display === "block" ? "none" : "block";
   });
-});
-// const body = document.body;
-// body.addEventListener("click", function (event) {
-//   if (event.target.id !== "commentSection") {
-//     // Hide the div if it exists
-//     const div = document.querySelector(".commentSection");
-//     if (div) {
-//       div.style.display = "none";
-//     }
-//   }
-// });
- 
+}); 
 const threeDotIcons = document.querySelectorAll(".threeDot");
-
 threeDotIcons.forEach((threeDotIcon) => {
   threeDotIcon.addEventListener("click", function () {
     const postElement = threeDotIcon.closest(".feedContent");

@@ -1,0 +1,374 @@
+
+/* Apply scrollbar styling to the entire webpage */
+::-webkit-scrollbar {
+  width: 8px;              /* Width of the scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: #1e1e2f;       /* Background of the scrollbar track */
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(85, 95, 130);          /* Color of the scrollbar thumb */
+  border-radius: 8px;       /* Rounded scrollbar thumb */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1e1e2f;          /* Color of the thumb when hovered */
+}
+
+/* Apply the same scrollbar styling to all divs */
+div::-webkit-scrollbar {
+  width: 8px;
+}
+
+div::-webkit-scrollbar-track {
+  background: #1e1e2f;
+}
+
+div::-webkit-scrollbar-thumb {
+  background: rgb(85, 95, 130);
+  border-radius: 8px;
+}
+
+div::-webkit-scrollbar-thumb:hover {
+  background: #2c314a;
+}
+/* Global Styles */
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #1e1e2f;
+  margin: 0;
+  color: white;
+  display: flex;
+}
+
+/* table {
+    width: 95%;
+    background-color: #28283f;
+    border: 1px solid transparent;
+}
+ td {
+    padding: 12px 15px;
+    text-align: left;
+}
+tr{
+    border-bottom: 4px solid #1E1E2F; /* Thicker border for the last row */
+
+.sidebar {
+  width: 250px;
+  background-color: rgb(25, 26, 26);
+  color: white;
+  padding: 20px;
+  position: fixed;
+  height: 100%;
+}
+
+.sidebar h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.sidebar ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.sidebar ul li {
+  margin: 15px 0;
+}
+
+.sidebar ul li a {
+  color: white;
+  text-decoration: none;
+  font-size: 18px;
+  display: block;
+  padding: 10px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.sidebar ul li a:hover {
+  background-color: #1c383b;
+}
+
+.content {
+  margin-left: 300px;
+  padding: 10px;
+  flex: 1;
+}
+
+h1 {
+  color: white;
+  margin-top: 10px;
+}
+
+.content h2 {
+  color: white;
+  margin-top: 0px;
+}
+.search-user {
+  float: right;
+  border-radius: 5px;
+  margin-top: 5px;
+  margin-right: 5px;
+  background-color: rgb(83, 83, 114);
+  border: none;
+  width: 200px;
+  height: 25px;
+  color: white;
+  padding: 5px;
+}
+.search-user::placeholder {
+  color: rgb(195, 200, 200);
+}
+.card-column {
+  overflow-y: auto;
+  background-color: #31314d;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  align-items: center;
+  margin-bottom: 20px;
+  height: 600px;
+}
+.user-card {
+  display: flex;
+  background-color: #29293e;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+  padding: 10px;
+  border-radius: 8px;
+  height: 34px;
+}
+
+.user-card img {
+  height: 45px;
+  width: 45px;
+  border-radius: 50%;
+}
+
+.user-card p {
+  margin: 0 10px;
+  color: white;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-name {
+  font-weight: bold;
+  color: aqua;
+  flex-basis: 15%; /* Adjust the percentage based on content */
+  flex-grow: 1;
+}
+
+.user-email {
+  flex-basis: 30%; /* Adjust as needed */
+  flex-grow: 2;
+}
+
+.user-university {
+  flex-basis: 25%; /* Adjust as needed */
+  flex-grow: 2;
+}
+
+.remove-btn,
+.post-remove-btn,
+.group-remove-btn {
+  width: 70px;
+  height: 30px;
+  background-color: red;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.hidden {
+  display: none;
+}
+
+.confirmation-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.popup-content p {
+  color: black;
+  margin-bottom: 20px;
+}
+
+.popup-content button {
+  margin-right: 40px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.post-remove-btn {
+  position: absolute;
+  right: 40px;
+}
+#confirm-delete,
+.confirm-delete-post,
+.confirm-delete-group {
+  margin-left: 40px;
+  background-color: red;
+  color: white;
+}
+
+#cancel-delete,
+.cancel-delete-post,
+.cancel-delete-group {
+  background-color: gray;
+  color: white;
+}
+.post-card {
+  background-color: #29293e;
+  padding: 10px;
+  overflow-y: auto;
+  margin-bottom: 5px;
+  color: white; /* Optional for better readability */
+}
+.flex-content {
+  display: flex;
+  height: 20px;
+  align-items: center; /* Vertically align items */
+}
+
+.flex-content img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+.flex-content p {
+  margin-left: 10px;
+  margin-top: 0;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.flex-content .time {
+  margin-left: auto;
+  font-size: 10px;
+  margin-top: 5px;
+}
+
+.flex-content .threeDot {
+  margin-left: 20px;
+  cursor: pointer;
+}
+.groups-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.inner-group-card {
+  background-color: #1e1e2f;
+  line-height: 10px;
+  width: 160px;
+  border-radius: 10px;
+  height: 230px;
+  padding: 10px;
+  font-size: 12px;
+}
+
+.inner-group-card i {
+  float: right;
+  margin-top: 4px;
+  font-weight: bold;
+  font-size: 20px;
+  cursor: pointer;
+}
+.inner-group-card img {
+  border-radius: 10px;
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  background-size: cover;
+  background-image: url("/images/user-img.png");
+}
+.details-btn {
+  float: right;
+  margin-top: -25px;
+  width: 50px;
+  height: 20px;
+  border-radius: 5px;
+  background-color: green;
+  color: white;
+  cursor: pointer;
+  border: none;
+}
+/* Modal Container */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Transparent background */
+}
+
+/* Modal Content */
+.modal-content {
+  background-color: rgb(255, 255, 255);
+  color: black;
+  margin: 15% auto;
+  padding: 20px;
+  height: 400px;
+  overflow-y: auto;
+  border: 1px solid #888;
+  width: 40%; /* Set the width of the modal */
+  border-radius: 10px;
+}
+
+/* Close Button */
+.close-btn {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+#modal-group-members {
+  list-style: none;
+  font-weight: bold;
+  color: purple;
+}
+.group-remove-btn {
+  position: absolute;
+  margin-left: 84px;
+  margin-top: -20px;
+}
+.feedback-card{
+  background-color: #1e1e2f;
+  width: 350px;
+  border-radius: 5px;
+padding: 10px;
+  height: 200px;
+  overflow-y: auto;
+}
+.outer-feedback-card{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}

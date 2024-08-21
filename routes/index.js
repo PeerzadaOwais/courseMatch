@@ -4,6 +4,8 @@ const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const upload = require("./multer");
 const userModel = require("./users");
+const contactModel = require("./feedback");
+const reportModel = require("./reports");
 const PostModel = require("./posts");
 const messageModel = require("./messages");
 const mongoose = require("mongoose");
@@ -148,9 +150,8 @@ router.get("/groups", isLoggedIn, async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
     const chats = await messageModel.find({
-      
-         senderId: user._id, groupId: group._id ,
-      
+      senderId: user._id,
+      groupId: group._id,
     });
     res.render("group", { user, loggedInUser: user });
   } catch (error) {
@@ -285,6 +286,7 @@ router.delete("/deleteGroup/:groupId", async (req, res) => {
     res.status(500).send({ message: "Error deleting group" });
   }
 });
+
 // Route to add a member to an existing group
 router.post("/group/add-member", async (req, res) => {
   const { groupId, userId } = req.body;
@@ -342,39 +344,28 @@ router.post("/uploadGroupMessage", upload.single("file"), async (req, res) => {
     file: file,
     createdAt: new Date(),
   });
-// console.log(newMessage);
+  // console.log(newMessage);
   await newMessage.save();
   const populatedMessage = await newMessage.populate("senderId", "username");
-  res.status(200).json({ success: true, data: {message,senderId,populatedMessage}});
-  
+  res
+    .status(200)
+    .json({ success: true, data: { message, senderId, populatedMessage } });
 });
 // Fetch messages for a specific group
-router.get('/groups/:groupId/messages', async (req, res) => {
+router.get("/groups/:groupId/messages", async (req, res) => {
   try {
-      const { groupId } = req.params;
-      const messages = await messageModel.find({ groupId }).populate('senderId').sort({ createdAt: 1 });
-      // console.log(messages);
-      res.json(messages);
+    const { groupId } = req.params;
+    const messages = await messageModel
+      .find({ groupId })
+      .populate("senderId")
+      .sort({ createdAt: 1 });
+    // console.log(messages);
+    res.json(messages);
   } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch messages' });
+    res.status(500).json({ error: "Failed to fetch messages" });
   }
 });
-// Route to get messages of a specific group
-// router.get("/groups/:groupId/messages", async (req, res) => {
-//   try {
-//     const groupId = req.params.groupId;
-//     const group = await GroupModel.findById(groupId).populate(
-//       "messages.sender"
-//     );
-//     if (!group) {
-//       return res.status(404).json({ error: "Group not found" });
-//     }
-//     res.json(group.messages);
-//   } catch (error) {
-//     console.error("Error fetching group messages:", error);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
+
 router.post("/uploadPost", isLoggedIn, async function (req, res, next) {
   const user = await userModel.findOne({ username: req.session.passport.user });
   const postData = await PostModel.create({
@@ -391,6 +382,7 @@ router.post("/uploadPost", isLoggedIn, async function (req, res, next) {
 // DELETE route to delete a post by ID
 router.delete("/deletePost/:postId", isLoggedIn, async (req, res) => {
   const postId = req.params.postId;
+  console.log(postId);
   const user = await userModel.findOne({ username: req.session.passport.user });
 
   try {
@@ -401,6 +393,7 @@ router.delete("/deletePost/:postId", isLoggedIn, async (req, res) => {
     await post.deleteOne(post);
     user.posts.remove(post);
     await user.save();
+
     res.send({ message: "Post deleted successfully" });
   } catch (err) {
     console.error(err);
@@ -490,11 +483,117 @@ router.post("/editComment", isLoggedIn, async (req, res) => {
 router.get("/about", function (req, res, next) {
   res.render("about");
 });
-
-router.get("/contact", function (req, res, next) {
-  res.render("contact");
+router.get("/admin", async function (req, res, next) {
+  const posts = await PostModel.find({});
+  const users = await userModel.find({});
+  var groups = await GroupModel.find({})
+    .populate("creator")
+    .populate("members");
+  const feedbacks = await contactModel.find({});
+  res.render("admin", { users, posts, groups, feedbacks });
 });
+//delete a group by admin
+router.delete("/deleteGroup/admin/:groupId", async (req, res) => {
+  try {
+    const groupId = req.params.groupId;
+    const group = await GroupModel.findById(groupId);
+    await group.deleteOne(group);
+    res.send({ message: "Group deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: "Error deleting group" });
+  }
+});
+// POST route to handle the user report
+router.post("/reportUser/:id", async (req, res) => {
+  const reportedUserId = req.params.id;
+  const user = await userModel.findOne({ username: req.session.passport.user });
+  const reportingUserId = user._id; // Assuming the logged-in user's ID is stored in req.user
+  console.log(reportingUserId);
+  const { reportType, reason } = req.body;
+  console.log(reportType);
+  console.log(reason);
+  // Check if the report type and reason are provided
+  if (!reportType || !reason) {
+    return res.status(400).send("Report type and reason are required.");
+  }
 
+  // Create a new report
+  const newReport = new reportModel({
+    reportingUser: reportingUserId,
+    reportedUser: reportedUserId,
+    reportType: reportType,
+    reason: reason,
+    createdAt: Date.now(),
+  });
+
+  // Save the report to the database
+  newReport
+    .save()
+    .then(() => {
+      res.json({ success: true });
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send("Error submitting report.");
+    });
+});
+// router.get('/api/group/:id', async (req, res) => {
+//   const groupId = req.params.id;
+
+//   try {
+//       const group = await GroupModel.findById(groupId).populate('creator').populate('members');
+//       const messages = await messageModel.find({ groupId: groupId }).populate('senderId', 'fullname');
+//       res.json({ group, messages });
+//   } catch (err) {
+//       res.status(500).json({ error: 'Error retrieving group and messages' });
+//   }
+// });
+router.get("/groups/:groupId/messages", async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const messages = await messageModel
+      .find({ groupId })
+      .populate("senderId")
+      .sort({ createdAt: 1 });
+    // console.log(messages);
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch messages" });
+  }
+});
+router.get("/contact", function (req, res, next) {
+  res.render("contact", { successMessage: null });
+});
+router.post("/submit_contact", async (req, res) => {
+  const { message } = req.body;
+
+  const user = await userModel.findOne({
+    username: req.session.passport.user,
+  });
+
+  // Create a new contact message document
+  const newMessage = new contactModel({
+    fullname: user.fullname,
+    email: user.email,
+    message: message,
+  });
+
+  // Save the message to the database
+  newMessage
+    .save()
+    .then(() => {
+      res.render("contact", {
+        successMessage: "Thank you! Your message has been sent...",
+      });
+    })
+    .catch((err) => {
+      console.error(err);
+      res
+        .status(500)
+        .render("contact", { success: false, error: "Error saving message" });
+    });
+});
 router.get("/profile/:id", isLoggedIn, async function (req, res) {
   const user_id = req.params.id;
   const user = await userModel.findById(user_id);
@@ -517,6 +616,7 @@ router.get("/userprofile/:id", isLoggedIn, async function (req, res) {
     ],
   });
   res.render("userprofile", {
+    successMessage: null ,
     currentUser,
     user,
     entries: user.entries,
@@ -524,7 +624,6 @@ router.get("/userprofile/:id", isLoggedIn, async function (req, res) {
     chats,
   });
 });
-
 
 router.post("/saveEntries", isLoggedIn, async function (req, res) {
   try {
@@ -591,12 +690,7 @@ router.get("/find", async function (req, res, next) {
   const text = req.query.text;
   var regex = new RegExp(text, "i");
   const users = await userModel.find({
-    $or: [
-      { username: regex },
-      { university: regex },
-      { major: regex },
-      // Add more objects as needed
-    ],
+    $or: [{ username: regex }, { university: regex }, { major: regex }],
   });
   res.json(users);
 });
@@ -890,7 +984,16 @@ router.post("/edit", async function (req, res, next) {
     res.status(500).send("Internal Server Error");
   }
 });
-
+router.delete("/users/:id", async (req, res) => {
+  try {
+    const userId = req.params.id;
+    await userModel.findByIdAndDelete(userId);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({ success: false });
+  }
+});
 router.post(
   "/login",
   passport.authenticate("local", {
