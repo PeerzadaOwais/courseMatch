@@ -19,7 +19,7 @@ const localStrategy = require("passport-local");
 const { group } = require("console");
 passport.use(new localStrategy(userModel.authenticate()));
 router.use(express.json());
-
+console.log(process.env.EMAIL_PASSWORD);
 // Nodemailer configuration
 const transporter = nodemailer.createTransport({
   service: "Gmail",
